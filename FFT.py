@@ -14,7 +14,7 @@ def fftFreq(chemin):
 
     freqArray = []
 
-    for i in range(10):
+    for i in range(30):
         idx=np.argmax(np.abs(w)**2)
         #print(abs(w[idx]))
         freq=freqs[idx]

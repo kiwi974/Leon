@@ -9,30 +9,38 @@ from scipy.integrate import quad
 
 import listeOperation as lo
 
+import time
 
 
 
 
-#Fonction trouvant une famille libre de dimension N à partir d'un vecteur u
+"""Fonction trouvant une famille libre de dimension N à partir d'un vecteur u
 #param : u -> premier vecteur de la famille libre à construire
-#        N -> dimension de l'espace dans lequel on recherche une famille libre
+#        p -> dimension de l'espace dans lequel on recherche une famille libre
 #retour : u ainsi que la famille libre de dimension N trouvee
-#precondition : N-1 >= 1 i.e. N >= 2
+#precondition : N-1 >= 1 i.e. N >= 2"""
 
-def fLibre(u,N):
-    numComposante = 0
+def fLibre(u,p):
     famille = [u]
-    i = 0
-    while (u[i]==0):
-        i+=1
-    for k in range(i,N-1):
-        nVect = list(u)
-        nVect[numComposante] = (k+2)*u[numComposante]
-        famille.append(nVect)
-        numComposante+=1
-    return famille
+    famille_aux = [u]
+    N = len(u)
+    b = np.array([0 for i in range(N)])
+    libre = 0
+    while (libre==0):
+        for k in range(p-1):
+            v = list(u)
+            vectGauss = [gauss(2,5) for i in range(N)]
+            v = lo.mult(u,vectGauss)
+            famille_aux.append(v)
+        #solution = np.linalg.solve(np.transpose(np.array(famille_aux)),b)
+        #if (lo.vectNul(abs(solution))):
+            #famille = famille_aux[:p]
+        libre = 1
+        #else:
+            #famille_aux = famille
+    return famille_aux
 
-f1 = fLibre([3,2,7],3)
+#f1 = fLibre([3,2,7,5,2,87],4)
 #print(f1)
 
 
@@ -62,7 +70,7 @@ def GS(fLibre):
         fOrtho.append(vk)
     return fOrtho
 
-gs1 = GS(f1)
+#gs1 = GS(f1)
 #print(gs1)
 #print(lo.sysLin(gs1,[0,0,0]))
 #print(lo.orthonormee(gs1))
@@ -83,7 +91,7 @@ def projection(u,b):
         projete[i] = lo.ps(u,b[i])
     return projete
 
-proj = projection([1,2,3],gs1)
+#proj = projection([1,2,3],gs1)
 #print(proj)
 
 
@@ -103,7 +111,7 @@ def projFamille(f,b):
         nEspace.append(v)
     return nEspace
 
-projF = projFamille([[1,2,3],[4,5,6],[7,8,9]],gs1[1:])
+#projF = projFamille([[1,2,3],[4,5,6],[7,8,9]],gs1[1:])
 #print(projF)
 
 
@@ -112,10 +120,10 @@ projF = projFamille([[1,2,3],[4,5,6],[7,8,9]],gs1[1:])
 #param : u -> vecteur tel que l'on projete sur son orthogonal Ort
 #        f -> famille dont on cherche les composantes dans Ort pour chaque vecteur
 #        y -> autre vecteur que l'on souhaite projeter sur cette famille
-#        N -> dimension de l'espace des observations courant
+#        p -> dimension de l'espace des observations courant
 
-def projSEOrtho(u,f,N):
-    fLibreU = fLibre(u,N)
+def projSEOrtho(u,f,p):
+    fLibreU = fLibre(u,p)
     fOrtho = GS(fLibreU)
     #Il faut retirer le premier vecteur de cette liste, car il s'agit de la composante relative a u
     #fOrtho = fOrtho[1:]
@@ -153,7 +161,7 @@ def genSonde(N):
         sonde.append(gauss(0,1))
     return sonde
 
-sonde1 = genSonde(5)
+#sonde1 = genSonde(5)
 #print(sonde1)
 
 
@@ -166,7 +174,9 @@ sonde1 = genSonde(5)
 
 def classer(y,variables,sonde):
     N = len(variables[0])
+    dimEspVar = len(variables[0])
     pvar = list(variables)
+    pvar.append(sonde)
     #py = list(y)
     p = len(pvar)
 
@@ -177,12 +187,12 @@ def classer(y,variables,sonde):
     ordre = []
 
     #Iteration du procede
-    while (N > 1) & (p >= 1) & (rencontree == 0):
+    while (N > 1) & (p > 1) & (rencontree == 0):
         #Calcul des coefficients de correlation
         coeffCorr = []
         for i in range(p):
-           c = corr(y,pvar[i])
-           coeffCorr.append(c)
+            c = corr(y,pvar[i])
+            coeffCorr.append(c)
 
         #Obtention du vecteur le plus corrélé à y
         indMax = coeffCorr.index(max(coeffCorr))
@@ -190,8 +200,8 @@ def classer(y,variables,sonde):
         ordre.append(u)
 
         #Si c'est la variable sonde, on arrête le processus
-        if (u == sonde):
-            print("On est tombé sur la variable sonde!")
+        if (indMax == (p-1)):
+            #print("On est tombé sur la variable sonde!")
             rencontree+=1
             break
 
@@ -201,15 +211,16 @@ def classer(y,variables,sonde):
 
         #Projection de y et toutes les variables non sélectionnées sur le sous-espace
         #orthogonal à u
-        pvar = projSEOrtho(u,pvar,N)
+        pvar = projSEOrtho(u,pvar,dimEspVar)
 
         N-=1
+
     # N = 1 : il reste une variable à classer
     return ordre
 
-y1 = [2,3,5]
-variables1 = [[5,4,2],[4,8,7],[3,1,2],[7,2,3],[4,6,2]]
-print(classer(y1,variables1,genSonde(3)))
+#y1 = [2,3,5]
+#variables1 = [[5,4,2],[4,8,7],[3,1,2],[7,2,3],[4,6,2]]
+#print(classer(y1,variables1,genSonde(3)))
 
 
 
@@ -217,25 +228,32 @@ print(classer(y1,variables1,genSonde(3)))
 
 
 #Fonction trouvant la distribution de probabilité empirique des variables non pertinentes
-#en réalisant le classement avec 1000 réalisation de la variable sonde (gaussienne)
-def distriNonPertinentes(y,variables):
+#en réalisant le classement avec nbVarSonde réalisation de la variable sonde (gaussienne)
+def distriNonPertinentes(y,variables,nbVarSonde):
+
+    print("Classement variable sonde")
+
+    debut = time.time()
+
     N = len(variables[0])
     p = len(variables)
     distri = [0 for i in range(p)]
 
-    #Generation de 1000 variables sondes
-    sondes = [genSonde(N) for i in range(1000)]
+    #Generation de nbVarSonde variables sondes
+    sondes = [genSonde(N) for i in range(nbVarSonde)]
 
     #Pour ces sondes, on effectue le classement et on récupère la place de la sonde
-    for i in range(1000):
+    for i in range(nbVarSonde):
         ordre = classer(y,variables,sondes[i])
-        #print(ordre)
         place = len(ordre)
         distri[place]+=1
 
+    fin = time.time()
+    print("Le classement des variables sonde a prit " + str(fin-debut))
+
     return distri
 
-variables2 = [[5,4,2],[4,8,7],[3,1,2],[7,2,3],[4,6,2],[8,4,2],[7,5,2],[6,3,1],[3,3,3],
-              [8,8,7],[7,4,4],[2,3,6],[9,5,4],[11,1,1],[54,2,1],[7,1,56],[6,6,9],[11,11,11]]
-d = distriNonPertinentes(y1,variables2)
-print(d)
+#variables2 = [[5,4,2],[4,8,7],[3,1,2],[7,2,3],[4,6,2],[8,4,2],[7,5,2],[6,3,1],[3,3,3],
+#              [8,8,7],[7,4,4],[2,3,6],[9,5,4],[11,1,1],[54,2,1],[7,1,56],[6,6,9],[11,11,11]]
+#d = distriNonPertinentes(y1,variables2)
+#print(d)

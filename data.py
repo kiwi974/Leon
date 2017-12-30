@@ -3,13 +3,12 @@
 
 
 import FFT
-import numpy as np
 import math
 import listeOperation as lo
 
 
-fichierH = ["test_Leon","test_Loic","Raymond","test_Walh"]
-fichierF = ["test_maman","test_Alex","test_Joanne"]
+fichierH = ["test_Leon","test_Loic","Raymond","test_Walh","test_Philippe","test_Romain","test_Mathieu","test_JP"]
+fichierF = ["test_maman","test_Alex","test_Joanne","test_Victime","test_VictimeSoeur","test_Cathy","test_Justine","test_Delphine"]
 
 
 
@@ -37,7 +36,7 @@ def pretraitement(z):
 def construcVA():
 
     #Vecteur des differentes realisations des variables
-    Z = [[] for i in range(10)] #10 car on prend 10 harmoniques, on verra après la selection des variables
+    Z = [[] for i in range(30)]
 
     #Vecteur des mesures : 1 pour les hommes et -1 pour les femmes
     y = []
@@ -45,8 +44,8 @@ def construcVA():
     #Acquisition des donnees concernant les hommes
     print("Hommes")
     for k in range(len(fichierH)):
-        spectre = FFT.fftFreq("VoiceRecord/homme/"+fichierH[k]+".wav")
-        print(spectre)
+        spectre = FFT.fftFreq("/home/ray974/Learning/VoiceRecord/homme/"+fichierH[k]+".wav")
+        #print(spectre)
         for i in range(len(spectre)):
             Z[i].append(spectre[i])
         y.append(1)
@@ -54,8 +53,8 @@ def construcVA():
     print("Femmes")
     #Acquisition des donnees concernant les femmes
     for k in range(len(fichierF)):
-        spectre = FFT.fftFreq("VoiceRecord/femme/"+fichierF[k]+".wav")
-        print(spectre)
+        spectre = FFT.fftFreq("/home/ray974/Learning/VoiceRecord/femme/"+fichierF[k]+".wav")
+        #print(spectre)
         for i in range(len(spectre)):
             Z[i].append(spectre[i])
         y.append(-1)
@@ -68,6 +67,6 @@ def construcVA():
     return y,Z
 
 
-y,Z = construcVA()
-print(np.array(y))
-print(np.array(Z))
+#y,Z = construcVA()
+#print(np.array(y))
+#print(np.array(Z))

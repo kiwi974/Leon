@@ -94,4 +94,17 @@ def orthonormee(b):
 
 
 
+#Fonction testant si un vecteur est numériquement nul
+def vectNul(v):
+    nul = True
+    i = 0
+    while (nul) & (i<len(v)):
+        nul = nul*(v[i]<10**(-15))
+        i+=1
+    return nul
+
+
+
+
+
 
