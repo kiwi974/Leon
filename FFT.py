@@ -3,7 +3,7 @@ import wave
 
 import numpy as np
 
-def fftFreq(chemin):
+def fftFreq(chemin,nbHarmoniques):
     wav = wave.open(chemin,'rb')
     (nchannels, sampwidth, framerate, nframes, comptype, compname) = wav.getparams()
     frames = wav.readframes(nframes)
@@ -14,7 +14,7 @@ def fftFreq(chemin):
 
     freqArray = []
 
-    for i in range(30):
+    for i in range(nbHarmoniques):
         idx=np.argmax(np.abs(w)**2)
         #print(abs(w[idx]))
         freq=freqs[idx]

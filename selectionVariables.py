@@ -4,23 +4,25 @@ import data
 import classement
 import matplotlib.pyplot as plt
 import numpy as np
+import listeOperation as lo
 
 
 
-def selectionVar():
+def selectionVar(nbHarmoniques,nbVarSonde):
 
     #Recuperation des spectres et du vecteur de sortie associe
-    y,Z = data.construcVA()
+    y,Z = data.construcVA(nbHarmoniques)
 
     #Calcul de la distribution des variables non pertinentes
-    distrib = classement.distriNonPertinentes(y,Z,1000)
+    distrib = classement.distriNonPertinentes(y,Z,nbVarSonde)
     print(distrib)
 
-    x = [i for i in range(30)]
-    plt.plot(np.array(x),np.array(distrib))
+    x = [i for i in range(nbHarmoniques)]
+    proportions = lo.mult(distrib,[(1/nbVarSonde) for i in range(nbHarmoniques)])
+    plt.plot(np.array(x),np.array(proportions))
     plt.show()
 
-selectionVar()
+selectionVar(30,1000)
 
 ##y,Z = data.construcVA()
 #classement.classer(y,Z,classement.genSonde(10))
