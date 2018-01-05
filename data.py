@@ -209,10 +209,7 @@ def DataSet(nbHarmoniques = -1):
         #Exemple suivant
         index += 1
         exemple = data.readline()
-
-
-
-    print(df)
+    return df
 
 
 
