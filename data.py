@@ -156,69 +156,67 @@ def updateDataSet():
 
 
 
+""" Fonction qui construit l'ensemble des datas pour l'apprentissage
+param : nbHarmoniques -> paramètres optionnel qui, s'il est spécifié, permet de ne garder que les nbHarmoniques 
+                         premières harmoniques pour chaque exemple. Sinon, on le prend toutes.
+precondition : nbHarmoniques <= nb total d'harmoniques presentes dans le jeu de donnees de base
+                   --> on peut noter que ceci implique de toujours enlever le '\n' en fin de ligne si jamais il y a 
+                       egalite dans la relation precedente '
+Remarque : on pourra obtenir les variables aléatoires associées pour la selection des variables en selectionnant 
+directement les colonnes (et la dernière colonne)"""
+
+def DataSet(nbHarmoniques = -1):
+
+    #Ouverture du fichier data
+    data = open("Data/data",'r')
+
+    #Recuperation du nb de data, du nb d'harmoniques et de la liste des colonnes
+    nbData = int(data.readline())
+    nbHarmo = int(data.readline())
+    colonnes = data.readline().split("<->")
+    n = len(colonnes[len(colonnes)-1])
+    colonnes[len(colonnes)-1] = colonnes[len(colonnes)-1][:n-1]    #On enlève le '\n' qui est sur le dernier mot
+
+    if (nbHarmoniques != -1):
+        s = colonnes[len(colonnes)-1]
+        colonnes = colonnes[:nbHarmoniques]
+        colonnes.append(s)
+
+    #indexage du dataFrame
+    index = 1
+
+    #Creation du dataFrame vide
+    df = pd.DataFrame(data=[], index= [], columns=colonnes)
+
+    #Construction des lignes du DataFrame
+    exemple = data.readline()
+    while (len(exemple) != 0):
+        freq = exemple.split("<->")
+        freq[len(freq)-1] = freq[len(freq)-1][:len(freq[len(freq)-1])-1]    #On enlève le '\n' qui est sur le dernier mot
+
+        #On reduit le nombre d'harmoniques si besoin
+        if (nbHarmoniques != -1):
+            freq = freq[:nbHarmoniques+1]
+
+        #On met la sortie à la fin du vecteur
+        s = freq[0]
+        freq.append(s)
+        freq = freq[1:]
+
+        #Ajout de l'exemple au DataFrame
+        df.loc[index] = freq
+
+        #Exemple suivant
+        index += 1
+        exemple = data.readline()
 
 
 
+    print(df)
 
 
 
+    #df.lock[index] = [frequences]
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""Fonction qui construit les realisations des differentes variables à partir des
-spectres frequentiels"""
-
-def construcVA(nbHarmoniques):
-
-    #Vecteur des differentes realisations des variables
-    Z = [[] for i in range(30)]
-
-    #Vecteur des mesures : 1 pour les hommes et -1 pour les femmes
-    y = []
-
-    #Acquisition des donnees concernant les hommes
-    print("Hommes")
-    for k in range(len(fichierH)):
-        spectre = FFT.fftFreq("/home/ray974/Learning/VoiceRecord/homme/"+fichierH[k]+".wav",nbHarmoniques)
-        print(spectre)
-        for i in range(len(spectre)):
-            Z[i].append(spectre[i])
-        y.append(1)
-
-    print("Femmes")
-    #Acquisition des donnees concernant les femmes
-    for k in range(len(fichierF)):
-        spectre = FFT.fftFreq("/home/ray974/Learning/VoiceRecord/femme/"+fichierF[k]+".wav",nbHarmoniques)
-        print(spectre)
-        for i in range(len(spectre)):
-            Z[i].append(spectre[i])
-        y.append(-1)
-
-    #Pretraitement des donnees
-    print("Pretraitement")
-    for k in range(len(Z)):
-        Z[k] = pretraitement(Z[k])
-
-    print(Z)
-
-    return y,Z
-
-
-#y,Z = construcVA()
-#print(np.array(y))
-#print(np.array(Z))
-
+#DataSet(10)
