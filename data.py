@@ -159,16 +159,17 @@ def updateDataSet():
 """ Fonction qui construit l'ensemble des datas pour l'apprentissage
 param : nbHarmoniques -> paramètres optionnel qui, s'il est spécifié, permet de ne garder que les nbHarmoniques 
                          premières harmoniques pour chaque exemple. Sinon, on le prend toutes.
+        chemin -> chemin vers le fichier contenant les data
 precondition : nbHarmoniques <= nb total d'harmoniques presentes dans le jeu de donnees de base
                    --> on peut noter que ceci implique de toujours enlever le '\n' en fin de ligne si jamais il y a 
                        egalite dans la relation precedente '
 Remarque : on pourra obtenir les variables aléatoires associées pour la selection des variables en selectionnant 
 directement les colonnes (et la dernière colonne)"""
 
-def DataSet(nbHarmoniques = -1):
+def DataSet(chemin,nbHarmoniques = -1):
 
     #Ouverture du fichier data
-    data = open("Data/data",'r')
+    data = open(chemin,'r')
 
     #Recuperation du nb de data, du nb d'harmoniques et de la liste des colonnes
     nbData = int(data.readline())

@@ -231,8 +231,6 @@ def classer(y,variables,sonde):
 #en réalisant le classement avec nbVarSonde réalisation de la variable sonde (gaussienne)
 def distriNonPertinentes(y,variables,nbVarSonde):
 
-    print("Classement variable sonde")
-
     debut = time.time()
 
     N = len(variables[0])
@@ -249,7 +247,7 @@ def distriNonPertinentes(y,variables,nbVarSonde):
         distri[place]+=1
 
     fin = time.time()
-    print("Le classement des variables sonde a prit " + str(fin-debut))
+    print("Le classement des variables sonde a prit " + str(fin-debut) + " secondes.")
 
     return distri
 
