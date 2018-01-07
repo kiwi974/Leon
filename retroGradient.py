@@ -5,6 +5,7 @@
 from random import gauss
 import data
 from math import *
+import numpy as np
 
 
 """Fonction initialisant la matrice des parametres (poids synaptiques)
@@ -41,7 +42,14 @@ param : x -> exemple prit pour le calcul
 sortie : prediction du modele pour l'exemple x et tableau des potentiels des 
         differents neurones du reseau"""
 
-def g(x,W1,W2,n,Nc):
+def g(x,W1,W2):
+
+    #Nombre de variables du modèle
+    n = len(x)
+
+    #Nombre de neuronnes cachés du modèle (il faut enlever le biais)
+    Nc = len(W2)-1
+
     modele = W2[0]
     #Le tableau des potentiels est initialisé avec le biais de la couche cachee
     potentiels = [1]
@@ -52,7 +60,6 @@ def g(x,W1,W2,n,Nc):
             p += W1[i][j]*x[j-1]
         potentiels.append(p)
         modele += W2[i]*tanh(p)
-    potentiels.append(modele)
     return modele,potentiels
 
 
@@ -65,9 +72,12 @@ precondition : y et g sont de même taille"""
 def EQM(y,g):
     err = 0
     n = len(g)
+    if (n != len(y)):
+        print("***EGM***")
+        print("len(y) = " + str(len(y)) + " != len(g) = " +str(n))
     for i in range(n):
         err += (y[i] - g[i])**2
-    err = 0.5*math.sqrt(err)
+    err = 0.5*sqrt(err)
     return err
 
 
@@ -76,21 +86,22 @@ def EQM(y,g):
 
 """Fonction calculant les "delta" de l'algorithme de retropropagation
 param : Nc -> nombre de neurones de la couche cachee
-        y -> vecteur des sorties attendues pour les differents exemples
-        g -> vecteur des sorties du modele pour les differents exemples
-        potentiel -> vecteur des potentiels que chacun des neurones
+        y -> sortie pour l'exemple considere
+        g -> sortie fournie par le reseau pour l'exemple considere
+        potentiel -> vecteur des potentiels de chacun des neurones
         W2 -> poids des connexions entre la couche cachee et la sortie"""
 
 def retro(Nc,y,g,potentiel,W2):
 
     #Construction du tableau de derivee : en tout il y a Nc+1 neurones
-    delta = [0 for i in range(Nc+2)]
+    delta = [0 for i in range(Nc+1)]
 
     #Calcul pour le neurone de sortie
-    delta[Nc+1] = -2*(y-g)*(1/(cosh(potentiel[Nc+1])**2))
+    print("potentiel = " + str(potentiel))
+    delta[Nc] = -2*(y-g)*(1/(cosh(potentiel[Nc])**2))
 
     #Calcul des autres poids
-    for i in range(Nc+1):
+    for i in range(Nc):
         delta[i] = (1/(cosh(potentiel[i])**2))*(delta[Nc]*W2[i+1])
 
     return delta
@@ -110,8 +121,26 @@ retour : tableau des parametres du reseau apres apprentissage"""
 
 def retropropagation(n,Nc,seuil,l,nbIterMax):
 
-    #Initialisatiuon des exemples et du vecteurs de sortie avec 10 harmonique
-    y,Z = data.dataSet(10)
+    #Recuperation des spectres et du vecteur de sortie associe
+    print("Extraction des données...")
+    df = data.DataSet("Data/data",n)
+    nbExemples = len(df.index)
+    nbHarmoniques = n #df.shape[1]-1;
+
+    Z = []
+    y= []
+
+    for i in range(1,nbExemples+1):
+        exemple = [1]   #biais de la variable
+        ex = df.loc[i]
+        for j in range(nbHarmoniques):
+            exemple.append(float(ex[j]))
+        Z.append(exemple)
+        y.append(float(ex[nbHarmoniques]))
+
+    print(len(Z))
+    print(len(Z[0]))
+
     nbExemples = len(Z)
 
     #Initialisation des parametres
@@ -121,7 +150,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax):
     potentielsEx = []
     sortiesEx = []
     for i in range(nbExemples):
-        sortie,potentiels = g(Z[i],W1,W2,n,Nc)
+        sortie,potentiels = g(Z[i],W1,W2)
         sortiesEx.append(sortie)
         potentielsEx.append(potentiels)
 
@@ -135,11 +164,13 @@ def retropropagation(n,Nc,seuil,l,nbIterMax):
     while (erreur > seuil) & (nbIter <= nbIterMax):
 
         #Retropropagation de l'exemple numero numEx
-        delta = retro(Nc,y,sortiesEx,potentielsEx[numEx],W2)
+        delta = retro(Nc,y[numEx],sortiesEx[numEx],potentielsEx[numEx],W2)
         deriveesW1 = [[0 for j in range(n+1)] for i in range(Nc)]
         deriveesW2 = [0 for i in range(Nc+1)]
         for i in range(Nc):
             for j in range(n+1):
+                print("delta[i] = " + str(delta[i]))
+                print("Z[numEx][j] = " + str(Z[numEx][j]))
                 deriveesW1[i][j] = delta[i]*Z[numEx][j]
         for i in range(Nc+1):
             deriveesW2[i] = delta[Nc+1]*tanh(potentielsEx[numEx][i])

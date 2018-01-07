@@ -210,6 +210,7 @@ def DataSet(chemin,nbHarmoniques = -1):
         #Exemple suivant
         index += 1
         exemple = data.readline()
+
     return df
 
 
@@ -217,4 +218,4 @@ def DataSet(chemin,nbHarmoniques = -1):
     #df.lock[index] = [frequences]
 
 
-#DataSet(10)
+DataSet("Data/data",5)

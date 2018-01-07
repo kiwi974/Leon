@@ -60,5 +60,45 @@ print("****************************************")
 #test pour 4 variables (+1 biais) et 2 neurones cachés
 ex0 = [2,5,8,7]
 W1_ex0,W2_ex0 = rg.initParam(4,2)
-g1 = rg.g(ex0,W1_ex0,W2_ex0,4,2)
+g1 = rg.g(ex0,W1_ex0,W2_ex0)
 print(g1)
+
+
+
+""" Test de la fonction retro qui calcul les "delta" de la retropropagation du gradient """
+
+print(" ")
+print(" ")
+print(" ")
+print("****************************************")
+print("*****************g**********************")
+print("****************************************")
+
+#Pour un reseau a 2 neuronnes caches, et 4 variables
+ex1 = [2,6,7,3]
+Nc1 = 2
+y1 = 1
+g1 = -1
+potentiel1 = [1, -2.977356494704201, 2.739592564489479]
+[o,W2_ex1] = rg.initParam(4,2)
+
+print(rg.retro(Nc1,y1,g1,potentiel1,W2_ex1))
+
+
+
+
+
+""" Test de la fonction retro qui efffectue la retropropagation du gradient """
+
+print(" ")
+print(" ")
+print(" ")
+print("****************************************")
+print("*****************g**********************")
+print("****************************************")
+n2 = 10
+Nc2 = 2
+seuil2 = 10^(-2)
+nbIterMax2 = 100
+
+#print(rg.retropropagation(n2,Nc2,seuil2,3,nbIterMax2))
