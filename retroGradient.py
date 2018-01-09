@@ -5,7 +5,10 @@
 from random import gauss
 import data
 from math import *
+import matplotlib.pyplot as plt
 import numpy as np
+import listeOperation as lo
+
 
 
 """Fonction initialisant la matrice des parametres (poids synaptiques)
@@ -45,7 +48,7 @@ sortie : prediction du modele pour l'exemple x et tableau des potentiels des
 def g(x,W1,W2):
 
     #Nombre de variables du modèle
-    n = len(x)
+    n = len(x)-1
 
     #Nombre de neuronnes cachés du modèle (il faut enlever le biais)
     Nc = len(W2)-1
@@ -63,6 +66,28 @@ def g(x,W1,W2):
     return modele,potentiels
 
 
+
+
+
+""" Fonction calculant une approximation de la derivee en w du modèle pour l'exemple xk evaluee au point wi
+param : x -> exemple prit pour le calcul
+        W1 -> poids entre les variables et la couche cachee
+        W2 -> poids entre la couche cachee et la sortie 
+        h -> pas pour approximer la derivee 
+retour : approximation de la derivee du modele au point w donne par W1 et W2 a x fixe"""
+
+def approxg(x,W1,W2,h):
+    h1 = [h for i in range(len(W1[0]))]
+    h2 = [h for i in range(len(W2))]
+    W1plush = []
+    W1moinsh = []
+    for i in range(len(W1)):
+        W1plush.append(lo.add(W1[i],h1))
+        W1moinsh.append(lo.sous(W1[i],h1))
+    W2plush = lo.add(W2,h2)
+    W2moinsh = lo.sous(W2,h2)
+    approx = 0.5*(g(x,W1plush,W2plush)[0]-g(x,W1moinsh,W2moinsh)[0])/h
+    return approx
 
 
 
@@ -89,7 +114,9 @@ param : Nc -> nombre de neurones de la couche cachee
         y -> sortie pour l'exemple considere
         g -> sortie fournie par le reseau pour l'exemple considere
         potentiel -> vecteur des potentiels de chacun des neurones
-        W2 -> poids des connexions entre la couche cachee et la sortie"""
+        W2 -> poids des connexions entre la couche cachee et la sortie
+sortie : delta pour les neurones cachés dans les premières cases et celui du neuronne de sortie dans la derniere case
+du tableau"""
 
 def retro(Nc,y,g,potentiel,W2):
 
@@ -97,7 +124,7 @@ def retro(Nc,y,g,potentiel,W2):
     delta = [0 for i in range(Nc+1)]
 
     #Calcul pour le neurone de sortie
-    print("potentiel = " + str(potentiel))
+    #print("potentiel = " + str(potentiel))
     delta[Nc] = -2*(y-g)*(1/(cosh(potentiel[Nc])**2))
 
     #Calcul des autres poids
@@ -110,6 +137,36 @@ def retro(Nc,y,g,potentiel,W2):
 
 
 
+
+""" Fonction effectuant le calcul de la matrice H pour faire la méthode de Levenberg-Marquardt"""
+def computeH(invH_prec,zeta):
+    transpo = (np.array(zeta)).T
+    iH = np.array(invH_prec)
+    z = np.array(zeta)
+    numerateur = iH*z*transpo*iH
+    denominateur = 1 + transpo*iH*z
+    invH = np.array(iH) - (numerateur/denominateur)
+    return invH.tolist()
+
+
+
+
+
+
+""" Fonction calculant le pas de Levenberg-Marquardt pour le pas mu et l'identité comme second terme"""
+def pasLM(mu,nbExemples,W1,W2,Z):
+    I = [[0 for i in range(nbExemples)] for j in range(nbExemples)]
+    for i in range(nbExemples):
+        I[i][i] = (1/mu)
+    invH = I
+    for k in range(nbExemples):
+        zeta = approxg(Z[k],W1,W2,10**(-10))
+        invH_prec = invH
+        invH = computeH(invH_prec,zeta)
+    return invH
+
+
+
 """Fonction effectuant le calcul des parametres du reseau par retropropagation du 
 gradient pour UNE SEULE couche cachee
 param : n -> nombre de variables par exemples (ici nombre d'harmonique par 
@@ -117,9 +174,11 @@ param : n -> nombre de variables par exemples (ici nombre d'harmonique par
         Nc -> nombre de neurones de LA couche cachée
         seuil -> seuil en deça duquel on s'arrête de minimiser la fonction coût
         l -> pas pour effectuer la modification des poids
+        nbIterRechercheMax -> nombre d'itérations maximal pour la méthode de LM
+        r -> facteur d'échelle pour mu
 retour : tableau des parametres du reseau apres apprentissage"""
 
-def retropropagation(n,Nc,seuil,l,nbIterMax):
+def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
 
     #Recuperation des spectres et du vecteur de sortie associe
     print("Extraction des données...")
@@ -138,9 +197,6 @@ def retropropagation(n,Nc,seuil,l,nbIterMax):
         Z.append(exemple)
         y.append(float(ex[nbHarmoniques]))
 
-    print(len(Z))
-    print(len(Z[0]))
-
     nbExemples = len(Z)
 
     #Initialisation des parametres
@@ -157,43 +213,95 @@ def retropropagation(n,Nc,seuil,l,nbIterMax):
     #Calcul de l'erreur quadratique moyenne associee
     erreur = EQM(y,sortiesEx)
 
-    numEx = 0
     nbIter = 1
+
+    tableErreur = [erreur]
 
     #Tant que l'erreur n'est pas suffisamment petite
     while (erreur > seuil) & (nbIter <= nbIterMax):
 
-        #Retropropagation de l'exemple numero numEx
-        delta = retro(Nc,y[numEx],sortiesEx[numEx],potentielsEx[numEx],W2)
+        #Retropropagation des exemples
+        delta = []
+        for k in range(nbExemples):
+            d = retro(Nc,y[k],sortiesEx[k],potentielsEx[k],W2)
+            delta.append(d)
         deriveesW1 = [[0 for j in range(n+1)] for i in range(Nc)]
         deriveesW2 = [0 for i in range(Nc+1)]
         for i in range(Nc):
             for j in range(n+1):
-                print("delta[i] = " + str(delta[i]))
-                print("Z[numEx][j] = " + str(Z[numEx][j]))
-                deriveesW1[i][j] = delta[i]*Z[numEx][j]
+                deriveesW1[i][j] = 0
+                for k in range(nbExemples):
+                    deriveesW1[i][j] += delta[k][i]*Z[k][j]
         for i in range(Nc+1):
-            deriveesW2[i] = delta[Nc+1]*tanh(potentielsEx[numEx][i])
+            deriveesW2[i] = 0
+            for k in range(nbExemples):
+                deriveesW2[i] += delta[k][Nc]*tanh(potentielsEx[k][i])
 
-        #Modification des poids
-        for i in range(Nc):
-            for j in range(n+1):
-                W1[i][j] = W1[i][j] - (l/nbIter)*deriveesW1[i][j]
-        for i in range(Nc+1):
-            W2[i] = W2[i] - (l/nbIter)*deriveesW2[i]
+        ##### MODIFICATION DES POIDS ######
+        mu = 0.1
+        #Modification de mu (et donc du pas) tant que l'on a pas accepte la modificaiton
+        accepte = False
+        nbIterRecherche = 1
+        while ((not accepte) & (nbIterRecherche <= nbIterRechercheMax)):
 
-        #Propagation des exemples pour recalculer les potentiels
+            #Calcul de l'inverse du pas du second ordre pour LM (avec l'identité et pas diag(H))
+            invH = pasLM(mu,nbExemples,W1,W2,Z)
+            W1_prec = W1
+            W2_prec = W2
+            erreur_prec = erreur
+
+            #Modification des poids avec une constante valant mu
+            for i in range(Nc):
+                for j in range(n+1):
+                    W1[i][j] = W1[i][j] - np.array(invH)*np.array(deriveesW1[i][j])
+            for i in range(Nc+1):
+                print(np.array(invH)*np.array(deriveesW2))
+                W2[i] = W2[i] - np.array(invH)*np.array(deriveesW2[i])
+
+            #Comparaison de l'erreur commise avec ces paramètres et de l'ancienne et decision
+            sortiesEx = []
+            for i in range(nbExemples):
+                sortie,potentiels = g(Z[i],W1,W2)
+                sortiesEx.append(sortie)
+            erreur = EQM(y,sortiesEx)
+
+            if (erreur < erreur_prec):
+                accepte = True
+                mu = mu/r
+            else :
+                mu = mu*r
+                W1 = W1_prec
+                W2 = W2_prec
+                erreur = erreur_prec
+
+            nbIterRecherche += 1
+
+        #Si on est sorti sans trouver de mu convenable, il faut quand même modifier les poids avce la dernière valeur de mu trouvee
+        if (nbIterRecherche > nbIterRechercheMax):
+            invH = pasLM(mu,nbExemples,W1,W2,Z)
+            #Modification des poids avec une constante valant mu
+            for i in range(Nc):
+                for j in range(n+1):
+                    W1[i][j] = W1[i][j] - np.array(invH)*np.array(deriveesW1[i][j])
+            for i in range(Nc+1):
+                W2[i] = W2[i] - np.array(invH)*np.array(deriveesW2[i])
+
+        #Propagation des exemples et recalcule des potentiels
         potentielsEx = []
         sortiesEx = []
         for i in range(nbExemples):
-            sortie,potentiels = g(Z[i],W1,W2,n,Nc)
+            sortie,potentiels = g(Z[i],W1,W2)
             sortiesEx.append(sortie)
             potentielsEx.append(potentiels)
 
         #Recalculer l'erreur quadratique moyenne
         erreur = EQM(y,sortiesEx)
+        tableErreur.append(erreur)
 
-        #Incrementer numEx
-        numEx = (numEx+1)//nbExemples
+        nbIter += 1
+
 
     #Renvoyer les tableaux des paramètres
+    abs = [(i+1) for i in range(len(tableErreur))]
+    plt.plot(np.array(abs),np.array(tableErreur))
+    plt.show()

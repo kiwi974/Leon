@@ -211,6 +211,8 @@ def DataSet(chemin,nbHarmoniques = -1):
         index += 1
         exemple = data.readline()
 
+    #print(df)
+
     return df
 
 
