@@ -99,6 +99,6 @@ print("****************************************")
 n2 = 10
 Nc2 = 2
 seuil2 = 10^(-2)
-nbIterMax2 = 300
+nbIterMax2 = 50
 
 print(rg.retropropagation(n2,Nc2,seuil2,0.5,nbIterMax2,100,10))

@@ -139,6 +139,7 @@ def retro(Nc,y,g,potentiel,W2):
 
 
 """ Fonction effectuant le calcul de la matrice H pour faire la méthode de Levenberg-Marquardt"""
+
 def computeH(invH_prec,zeta):
     transpo = (np.array(zeta)).T
     iH = np.array(invH_prec)
@@ -154,9 +155,11 @@ def computeH(invH_prec,zeta):
 
 
 """ Fonction calculant le pas de Levenberg-Marquardt pour le pas mu et l'identité comme second terme"""
+
 def pasLM(mu,nbExemples,W1,W2,Z):
-    I = [[0 for i in range(nbExemples)] for j in range(nbExemples)]
-    for i in range(nbExemples):
+    nbPoids = len(W1)*len(W1[0]) + len(W2)
+    I = [[0 for i in range(nbPoids)] for j in range(nbPoids)]
+    for i in range(nbPoids):
         I[i][i] = (1/mu)
     invH = I
     for k in range(nbExemples):
@@ -167,7 +170,63 @@ def pasLM(mu,nbExemples,W1,W2,Z):
 
 
 
-"""Fonction effectuant le calcul des parametres du reseau par retropropagation du 
+
+
+""" Fonction modifiant les poids par la méthode de Levenberg (-Marquardt) 
+param : W1 -> poids entre les variables et la couche cachee
+        W2 -> poids entre la couche cachee et la sortie 
+        invH -> matrice inverse intervenant dans le pas de LM
+        derW1 -> derivees de la fonction coût par rapport aux param. de la 1ere couche
+        derW2 -> derivees de la fonction coût par rapport aux param. de la 2eme couche
+"""
+
+def modificationPoids(W1, W2, invH, derW1, derW2):
+
+    #Construction du vecteur des poids
+    W = []
+    n1 = len(W1)
+    n2 = len(W2)
+
+    for i in range(n1):
+        for j in range(len(W1[0])):
+            W.append([W1[i][j]])
+    for i in range(len(W2)):
+        W.append([W2[i]])
+
+    #Construction du vecteur gradient de la fonction coût
+    derW = []
+    for i in range(len(derW1)):
+        for j in range(len(derW1[0])):
+            derW.append([derW1[i][j]])
+    for i in range(len(derW2)):
+        derW.append([derW2[i]])
+
+    #Calcul du pas de LM
+    pas = np.mat(invH)*(np.mat(derW))
+
+    #Modification des poids
+    W = (np.array(W) - pas).tolist()
+
+    Wl = []
+    for i in range(len(W)):
+        Wl.append(W[i][0])
+
+    #Reconstruction des vecteurs de parametres
+    W1_maj = []
+    W2_maj = []
+    for i in range(n1):
+        ligne = []
+        for j in range(len(W1[0])):
+            ligne.append(Wl[i+j])
+        W1_maj.append(ligne)
+    for j in range(len(W2)):
+        W2_maj.append(Wl[n1+j])
+
+    return W1_maj,W2_maj
+
+
+
+"""Fonction effectuant le calcul des parametres du reseau par retropropagation du
 gradient pour UNE SEULE couche cachee
 param : n -> nombre de variables par exemples (ici nombre d'harmonique par 
              enregistrement
@@ -251,12 +310,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
             erreur_prec = erreur
 
             #Modification des poids avec une constante valant mu
-            for i in range(Nc):
-                for j in range(n+1):
-                    W1[i][j] = W1[i][j] - np.array(invH)*np.array(deriveesW1[i][j])
-            for i in range(Nc+1):
-                print(np.array(invH)*np.array(deriveesW2))
-                W2[i] = W2[i] - np.array(invH)*np.array(deriveesW2[i])
+            W1,W2 = modificationPoids(W1,W2,invH,deriveesW1,deriveesW2)
 
             #Comparaison de l'erreur commise avec ces paramètres et de l'ancienne et decision
             sortiesEx = []
@@ -280,11 +334,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
         if (nbIterRecherche > nbIterRechercheMax):
             invH = pasLM(mu,nbExemples,W1,W2,Z)
             #Modification des poids avec une constante valant mu
-            for i in range(Nc):
-                for j in range(n+1):
-                    W1[i][j] = W1[i][j] - np.array(invH)*np.array(deriveesW1[i][j])
-            for i in range(Nc+1):
-                W2[i] = W2[i] - np.array(invH)*np.array(deriveesW2[i])
+            W1,W2 = modificationPoids(W1,W2,invH,deriveesW1,deriveesW2)
 
         #Propagation des exemples et recalcule des potentiels
         potentielsEx = []
