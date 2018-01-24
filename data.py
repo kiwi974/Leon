@@ -76,7 +76,7 @@ def updateDataSet():
     Hfiles = open("VoiceRecord/homme/Hfiles",'r')
     Ffiles = open("VoiceRecord/femme/Ffiles",'r')
 
-    #Fichiers dans lesquels on écrit les fichiers déhà traités
+    #Fichiers dans lesquels on écrit les fichiers déjà traités
     Htreated = open("VoiceRecord/homme/Htreated",'a')
     Ftreated = open("VoiceRecord/femme/Ftreated",'a')
 
