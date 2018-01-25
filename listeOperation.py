@@ -107,4 +107,18 @@ def vectNul(v):
 
 
 
+""" Fonction renvoyant un représentation d'une liste sous forme d'un string 
+param : l -> la liste a traiter
+exemple : [2,5,8] --> 2<->5<->8 """
+
+def tabToString(l):
+    n = len(l)
+    chaine = str(l[0])
+    for i in range(1,n):
+        chaine = chaine + "<->" + str(l[i])
+    return chaine
+
+
+
+
 

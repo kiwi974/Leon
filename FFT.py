@@ -43,15 +43,15 @@ def fftFreq(chemin,freqMin,freqMax):
     freq = freq[indFreqMin:indFreqMax]
     spectre = spectre[indFreqMin:indFreqMax]
 
-    #tracerSpectre(freq,spectre)
-
     return freq,spectre
 
 
 
 
 
-def tracerSpectre(freq,spectre):
+def tracerSpectre(freq,spectre,couleur):
+
+    print(spectre.max())
 
     spectre = spectre/spectre.max()
     n = len(spectre)
@@ -66,8 +66,8 @@ def tracerSpectre(freq,spectre):
     moya = moya/n
 
     figure(figsize=(9,4))
-    vlines(freq,[0],spectre,'r')
-    vlines([moyf],[0],[moya],'b')
+    vlines(freq,[0],spectre,couleur)
+    vlines([moyf],[0],[moya],'g')
     xlabel('f (Hz)')
     ylabel('A')
     #axis([0,0.5*rate,0,1])
@@ -92,9 +92,11 @@ def affichageSpectres():
                 else:
                     ind = ind + "0"
             if (col[5]=="male"):
-                fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",0,500)
+                freq,spectre = fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",0,500)
+                tracerSpectre(freq,spectre,'r')
             elif (col[5]=="female"):
-                fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",0,500)
+                freq,spectre = fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",0,500)
+                tracerSpectre(freq,spectre,'b')
             else:
                 print('')
             nbRow += 1
@@ -102,4 +104,4 @@ def affichageSpectres():
 
 
 
-#affichageSpectres()
+affichageSpectres()
