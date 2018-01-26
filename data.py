@@ -6,7 +6,6 @@ import FFT
 import math
 import listeOperation as lo
 import pandas as pd
-import numpy as np
 import os
 
 #Changement du repertoire de travaille

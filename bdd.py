@@ -43,7 +43,7 @@ def initaliazeBDD(name):
 initaliazeBDD("bdd_dev.db")
 
 
-def traitementEnregistrements(name):
+def traitementEnregistrements(name,freqMin,freqMax):
 
     bdd = sqlite3.connect(name)
     cursor = bdd.cursor()
@@ -61,13 +61,13 @@ def traitementEnregistrements(name):
                 else:
                     ind = ind + "0"
             if (col[5]=="male"):
-                freq,spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav", 0, 500)
+                freq,spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav", freqMin, freqMax)
                 freq = lo.tabToString(freq)
                 spectre = lo.tabToString(spectre)
                 chaine = "sample-" + ind + str(nbRow)
                 cursor.execute("INSERT INTO male(nom_extrait, frequences, amplitudes) VALUES(?,?,?)", (chaine, freq, spectre))
             elif (col[5]=="female"):
-                freq, spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",0,500)
+                freq, spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",freqMin,freqMax)
                 freq = lo.tabToString(freq)
                 spectre = lo.tabToString(spectre)
                 chaine = "sample-" + ind + str(nbRow)
