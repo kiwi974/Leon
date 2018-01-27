@@ -4,6 +4,7 @@ import csv
 import FFT
 import listeOperation as lo
 import exploitation as explo
+import numpy as np
 
 
 #Changement du repertoire de travaille
@@ -63,7 +64,9 @@ def traitementEnregistrements(name,freqMin,freqMax):
     nbFiles = len(os.listdir("/media/ray974/common-voice/cv-valid-dev/wav"))
 
     descripteursH = []
+    mPondH = []
     descripteursF = []
+    mPondF = []
 
     nbH = 0
     nbF = 0
@@ -84,9 +87,8 @@ def traitementEnregistrements(name,freqMin,freqMax):
             if (col[5]=="male"):
                 freq,spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav", freqMin, freqMax)
                 n = len(freq)
-                mPond = explo.pondMoy(freq,spectre,n)
-                l = (explo.densite(spectre,n)).append(mPond)
-                descripteursH.append(l)
+                mPondH.append(explo.pondMoy(freq,spectre,n))
+                descripteursH.append(explo.densite(spectre,n))
                 freq = lo.tabToString(freq)
                 spectre = lo.tabToString(spectre)
                 chaine = "sample-" + ind + str(nbRow)
@@ -95,9 +97,8 @@ def traitementEnregistrements(name,freqMin,freqMax):
             elif (col[5]=="female"):
                 freq, spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",freqMin,freqMax)
                 n = len(freq)
-                mPond = explo.pondMoy(freq,spectre,n)
-                l = (explo.densite(spectre,n)).append(mPond)
-                descripteursF.append(l)
+                mPondF.append(explo.pondMoy(freq,spectre,n))
+                descripteursF.append(explo.densite(spectre,n))
                 freq = lo.tabToString(freq)
                 spectre = lo.tabToString(spectre)
                 chaine = "sample-" + ind + str(nbRow)
@@ -106,8 +107,31 @@ def traitementEnregistrements(name,freqMin,freqMax):
             else:
                 useless = 1
             nbRow += 1
-    print(nbH)
-    print(nbF)
+
+    #Pretraitement des donnees
+    n = len(descripteursH[0]) # = len(descripteursF[0])
+
+    mPondF = explo.pretraitement(mPondF)
+    mPondH = explo.pretraitement(mPondH)
+
+    descripteursH = np.array(descripteursH)
+    descripteursF = np.array(descripteursF)
+
+    for j in range(n):
+        descripteursH[:,j] = explo.pretraitement(descripteursH[:,j])
+        descripteursF[:,j] = explo.pretraitement(descripteursF[:,j])
+
+    descripteursH = descripteursH.tolist()
+    descripteursF = descripteursF.tolist()
+
+
+    for i in range(1,nbH+1):
+        cursor.execute("""UPDATE male SET moyenne_freq_ponderee = ? WHERE id = ?""", (mPondH[i-1],i))
+        cursor.execute("""UPDATE male SET densites = ? WHERE id = ?""", (lo.tabToString(descripteursH[i-1]),i))
+    for i in range(1,nbF+1):
+        cursor.execute("""UPDATE female SET moyenne_freq_ponderee = ? WHERE id = ?""", (mPondF[i-1],i))
+        cursor.execute("""UPDATE female SET densites = ? WHERE id = ?""", (lo.tabToString(descripteursF[i-1]),i))
+
 
     bdd.commit()
     cursor.close()
