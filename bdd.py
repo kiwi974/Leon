@@ -46,7 +46,7 @@ def initaliazeBDD(name):
     bdd.close()
 
 
-initaliazeBDD("bdd_dev.db")
+#initaliazeBDD("bdd_dev.db")
 
 
 
@@ -130,4 +130,4 @@ def traitementEnregistrements(name,freqMin,freqMax,nbParts):
     bdd.close()
 
 
-traitementEnregistrements("bdd_dev.db",20,500,15)
+#traitementEnregistrements("bdd_dev.db",20,500,15)
