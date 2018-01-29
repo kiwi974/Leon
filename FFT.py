@@ -43,7 +43,7 @@ def fftFreq(chemin,freqMin,freqMax):
     n = data.size
     duree = 1.0*n/rate  #periode du signal
 
-    debut = 1.5
+    debut = 0.5
 
     #Obtention du spectre
     start = int(debut*rate)

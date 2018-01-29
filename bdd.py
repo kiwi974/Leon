@@ -50,22 +50,27 @@ initaliazeBDD("bdd_dev.db")
 
 
 
+""" Fonction ramenant les valeurs du tableau tab de l'intervalle [0,n] dans l'intervalle [0,1]. """
+
+def toIntervalle(tab,n):
+    tab = lo.div(tab,[n for i in range(len(tab))])
+    #On ne garde que 5 chiffres après la virgule
+    for i in range(len(tab)):
+        tab[i] = ((tab[i]*100000)//1)/100000
+    return tab
 
 
 
 
 
-
-def traitementEnregistrements(name,freqMin,freqMax):
+def traitementEnregistrements(name,freqMin,freqMax,nbParts):
 
     bdd = sqlite3.connect(name)
     cursor = bdd.cursor()
 
     nbFiles = len(os.listdir("/media/ray974/common-voice/cv-valid-dev/wav"))
 
-    descripteursH = []
     mPondH = []
-    descripteursF = []
     mPondF = []
 
     nbH = 0
@@ -88,49 +93,36 @@ def traitementEnregistrements(name,freqMin,freqMax):
                 freq,spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav", freqMin, freqMax)
                 n = len(freq)
                 mPondH.append(explo.pondMoy(freq,spectre,n))
-                descripteursH.append(explo.densite(spectre,n))
+                densH = toIntervalle(explo.densite(spectre,n,nbParts),n)
                 freq = lo.tabToString(freq)
                 spectre = lo.tabToString(spectre)
+                densH = lo.tabToString(densH)
                 chaine = "sample-" + ind + str(nbRow)
-                cursor.execute("INSERT INTO male(nom_extrait, frequences, amplitudes) VALUES(?,?,?)", (chaine, freq, spectre))
+                cursor.execute("INSERT INTO male(nom_extrait, frequences, amplitudes, densites) VALUES(?,?,?,?)", (chaine, freq, spectre, densH))
                 nbH += 1
             elif (col[5]=="female"):
                 freq, spectre = FFT.fftFreq("/media/ray974/common-voice/cv-valid-dev/wav/sample-" + ind + str(nbRow) + ".wav",freqMin,freqMax)
                 n = len(freq)
                 mPondF.append(explo.pondMoy(freq,spectre,n))
-                descripteursF.append(explo.densite(spectre,n))
+                densF = toIntervalle(explo.densite(spectre,n,nbParts),n)
                 freq = lo.tabToString(freq)
                 spectre = lo.tabToString(spectre)
+                densF = lo.tabToString(densF)
                 chaine = "sample-" + ind + str(nbRow)
-                cursor.execute("INSERT INTO female(nom_extrait, frequences, amplitudes) VALUES(?,?,?)", (chaine, freq, spectre))
+                cursor.execute("INSERT INTO female(nom_extrait, frequences, amplitudes, densites) VALUES(?,?,?,?)", (chaine, freq, spectre, densF))
                 nbF += 1
             else:
                 useless = 1
             nbRow += 1
 
     #Pretraitement des donnees
-    n = len(descripteursH[0]) # = len(descripteursF[0])
-
     mPondF = explo.pretraitement(mPondF)
     mPondH = explo.pretraitement(mPondH)
 
-    descripteursH = np.array(descripteursH)
-    descripteursF = np.array(descripteursF)
-
-    for j in range(n):
-        descripteursH[:,j] = explo.pretraitement(descripteursH[:,j])
-        descripteursF[:,j] = explo.pretraitement(descripteursF[:,j])
-
-    descripteursH = descripteursH.tolist()
-    descripteursF = descripteursF.tolist()
-
-
     for i in range(1,nbH+1):
         cursor.execute("""UPDATE male SET moyenne_freq_ponderee = ? WHERE id = ?""", (mPondH[i-1],i))
-        cursor.execute("""UPDATE male SET densites = ? WHERE id = ?""", (lo.tabToString(descripteursH[i-1]),i))
     for i in range(1,nbF+1):
         cursor.execute("""UPDATE female SET moyenne_freq_ponderee = ? WHERE id = ?""", (mPondF[i-1],i))
-        cursor.execute("""UPDATE female SET densites = ? WHERE id = ?""", (lo.tabToString(descripteursF[i-1]),i))
 
 
     bdd.commit()
@@ -138,4 +130,4 @@ def traitementEnregistrements(name,freqMin,freqMax):
     bdd.close()
 
 
-traitementEnregistrements("bdd_dev.db",20,500)
+traitementEnregistrements("bdd_dev.db",20,500,15)
