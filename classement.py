@@ -214,8 +214,7 @@ def classer(y,variables,sonde):
         N-=1
 
     # N = 1 : il reste une variable à classer
-    print(varClassement)
-    return ordre
+    return varClassement
 
 #y1 = [2,3,5]
 #variables1 = [[5,4,2],[4,8,7],[3,1,2],[7,2,3],[4,6,2]]
@@ -235,6 +234,8 @@ def distriNonPertinentes(y,variables,nbVarSonde):
     N = len(variables[0])
     p = len(variables)
 
+    classements = []
+
     distri = [0 for i in range(p+1)]
 
     #Generation de nbVarSonde variables sondes
@@ -243,6 +244,7 @@ def distriNonPertinentes(y,variables,nbVarSonde):
     #Pour ces sondes, on effectue le classement et on récupère la place de la sonde
     for i in range(nbVarSonde):
         ordre = classer(y,variables,sondes[i])
+        classements.append(ordre)
         place = len(ordre)
         print("La sonde n° " + str(i) + " a été classé au rang " + str(len(ordre)) + ".")
         distri[place]+=1
@@ -250,7 +252,7 @@ def distriNonPertinentes(y,variables,nbVarSonde):
     fin = time.time()
     print("Le classement des variables sonde a prit " + str(fin-debut) + " secondes.")
 
-    return distri
+    return distri, classements
 
 #variables2 = [[5,4,2],[4,8,7],[3,1,2],[7,2,3],[4,6,2],[8,4,2],[7,5,2],[6,3,1],[3,3,3],
 #              [8,8,7],[7,4,4],[2,3,6],[9,5,4],[11,1,1],[54,2,1],[7,1,56],[6,6,9],[11,11,11]]

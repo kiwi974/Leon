@@ -43,7 +43,7 @@ def initaliazeBDD(name):
     bdd.close()
 
 
-initaliazeBDD("bdd_dev.db")
+#initaliazeBDD("bdd_dev.db")
 
 """ Fonction ramenant les valeurs du tableau tab de l'intervalle [0,n] dans l'intervalle [0,1]. """
 
@@ -151,4 +151,4 @@ def traitementEnregistrements(name, freqMin, freqMax, nbParts):
     bdd.close()
 
 
-traitementEnregistrements("bdd_dev.db", 20, 500, 15)
+#traitementEnregistrements("bdd_dev.db", 20, 500, 15)
