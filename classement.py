@@ -1,18 +1,12 @@
 ##Package où l'on trouve toutes les fonctions nécessaire pour effectuer la sélection des variables
 
 import math
+import time
 from random import gauss
 
 import numpy as np
-from matplotlib.pyplot import plot, show
-from scipy.integrate import quad
 
 import listeOperation as lo
-
-import time
-
-
-
 
 """Fonction trouvant une famille libre de dimension N à partir d'un vecteur u
 #param : u -> premier vecteur de la famille libre à construire
@@ -177,8 +171,10 @@ def classer(y,variables,sonde):
     dimEspVar = len(variables[0])
     pvar = list(variables)
     pvar.append(sonde)
+    varClassement = []
     #py = list(y)
     p = len(pvar)
+    ordreVar = [(i+1) for i in range(p)]
 
     #Boolen valant true ssi la variable classee est la variable sonde
     rencontree = 0
@@ -198,6 +194,7 @@ def classer(y,variables,sonde):
         indMax = coeffCorr.index(max(coeffCorr))
         u = pvar[indMax]
         ordre.append(u)
+        varClassement.append(ordreVar[indMax])
 
         #Si c'est la variable sonde, on arrête le processus
         if (indMax == (p-1)):
@@ -207,6 +204,7 @@ def classer(y,variables,sonde):
 
         #Suppression de cette variable dans la liste des variables
         del pvar[indMax]
+        del ordreVar[indMax]
         p-=1
 
         #Projection de y et toutes les variables non sélectionnées sur le sous-espace
@@ -216,6 +214,7 @@ def classer(y,variables,sonde):
         N-=1
 
     # N = 1 : il reste une variable à classer
+    print(varClassement)
     return ordre
 
 #y1 = [2,3,5]
@@ -235,7 +234,8 @@ def distriNonPertinentes(y,variables,nbVarSonde):
 
     N = len(variables[0])
     p = len(variables)
-    distri = [0 for i in range(p)]
+
+    distri = [0 for i in range(p+1)]
 
     #Generation de nbVarSonde variables sondes
     sondes = [genSonde(N) for i in range(nbVarSonde)]
@@ -244,6 +244,7 @@ def distriNonPertinentes(y,variables,nbVarSonde):
     for i in range(nbVarSonde):
         ordre = classer(y,variables,sondes[i])
         place = len(ordre)
+        print("La sonde n° " + str(i) + " a été classé au rang " + str(len(ordre)) + ".")
         distri[place]+=1
 
     fin = time.time()
