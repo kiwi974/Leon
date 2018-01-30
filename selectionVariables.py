@@ -51,12 +51,17 @@ def selectionVar(chemin,nbParts,nbVarSonde):
     distrib, classements = classement.distriNonPertinentes(y,Z,nbVarSonde)
     print("La distribution trouvee est : " + str(distrib))
 
+    plt.figure(figsize=(9, 7))
+
     #Traces variable sonde
-    x = [i for i in range(nbParts+1)]
+    x = [(i+1) for i in range(nbParts+1)]
     proportions = lo.mult(distrib,[(1/nbVarSonde) for i in range(nbParts+2)])
-    plt.plot(np.array(x),np.array(proportions))
+    plt.plot(np.array(x),np.array(proportions),'deeppink')
 
     #Traces pour les autres variables
+    couleurs = ['black','rosybrown','brown','red','saddlebrown','darkorange','orange','goldenrod','olive','greenyellow',
+                'yellow','forestgreen','turquoise','cyan','royalblue','darkblue','darkorchid','darkviolet','purple',
+                'pink']
     rangs = [[0 for j in range(nbParts+1)] for i in range(nbParts+1)]
     for i in range(len(classements)):
         for j in range(len(classements[i])):
@@ -64,7 +69,13 @@ def selectionVar(chemin,nbParts,nbVarSonde):
     for i in range(len(rangs)):
         rangs[i] = lo.mult(rangs[i],[(1/nbVarSonde) for i in range(nbParts+1)])
     for i in range(nbParts+1):
-        plt.plot(np.array(x),np.array(rangs[i]),'r')
+        if (i<=14):
+            lab = 'd'+str(i+1)
+        else :
+            lab = 'moy'
+        plt.plot(np.array(x),np.array(rangs[i]),couleurs[i],label=lab)
+
+    plt.legend()
 
     plt.show()
 
