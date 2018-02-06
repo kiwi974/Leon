@@ -5,7 +5,7 @@ import classement
 import matplotlib.pyplot as plt
 import numpy as np
 import listeOperation as lo
-import sqlite3
+import exploitation as explo
 import os
 
 
@@ -13,38 +13,10 @@ import os
 os.chdir("/home/ray974/Learning/Data")
 
 
-def recupererData(chemin,nbParts):
-    conn = sqlite3.connect(chemin)
-    cursor = conn.cursor()
-
-    Z = [[] for i in range(nbParts)]
-    y = []
-
-    cursor.execute("""SELECT moyenne_freq_ponderee, densites FROM male""")
-    for row in cursor:
-        ex = row[1].split("<->")
-        for j in range(nbParts-1):
-            Z[j].append(float(ex[j]))
-        Z[nbParts-1].append(float(row[0]))
-        y.append(1)
-
-    cursor.execute("""SELECT moyenne_freq_ponderee, densites FROM female""")
-    for row in cursor:
-        ex = row[1].split("<->")
-        for j in range(nbParts-1):
-            Z[j].append(float(ex[j]))
-        Z[nbParts-1].append(float(row[0]))
-        y.append(-1)
-
-    return y,Z
-
-
-#recupererData("bdd_dev.db",10)
-
-def selectionVar(chemin,nbParts,nbVarSonde):
+def selectionVar(chemin,nbVarSonde):
 
     #Recuperation des spectres et du vecteur de sortie associe
-    y,Z = recupererData(chemin,nbParts)
+    y,Z,nbDesc = explo.getDataVar(chemin)
 
     #Calcul de la distribution des variables non pertinentes
     print("Debut du classement...")
@@ -52,6 +24,8 @@ def selectionVar(chemin,nbParts,nbVarSonde):
     print("La distribution trouvee est : " + str(distrib))
 
     plt.figure(figsize=(9, 7))
+
+    nbParts = nbDesc
 
     #Traces variable sonde
     x = [(i+1) for i in range(nbParts+1)]
@@ -81,7 +55,5 @@ def selectionVar(chemin,nbParts,nbVarSonde):
 
 
 
-selectionVar("bdd_dev.db",15,20)
+#selectionVar("bdd_dev.db",20)
 
-##y,Z = data.construcVA()
-#classement.classer(y,Z,classement.genSonde(10))

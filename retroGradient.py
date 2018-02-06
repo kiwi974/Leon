@@ -8,6 +8,7 @@ from math import *
 import matplotlib.pyplot as plt
 import numpy as np
 import listeOperation as lo
+import exploitation as explo
 
 
 
@@ -98,7 +99,7 @@ def EQM(y,g):
     err = 0
     n = len(g)
     if (n != len(y)):
-        print("***EGM***")
+        print("***EQM***")
         print("len(y) = " + str(len(y)) + " != len(g) = " +str(n))
     for i in range(n):
         err += (y[i] - g[i])**2
@@ -237,29 +238,19 @@ param : n -> nombre de variables par exemples (ici nombre d'harmonique par
         r -> facteur d'échelle pour mu
 retour : tableau des parametres du reseau apres apprentissage"""
 
-def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
+def retropropagation(chemin,n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r,y=[],Z=[]):
+
+    #Tableau flag pour la recherche du pas dans Levengerb
+    flag = [0,0]
 
     #Recuperation des spectres et du vecteur de sortie associe
-    print("Extraction des données...")
-    df = data.DataSet("Data/data",n)
-    nbExemples = len(df.index)
-    nbHarmoniques = n #df.shape[1]-1;
-
-    Z = []
-    y= []
-
-    for i in range(1,nbExemples+1):
-        exemple = [1]   #biais de la variable
-        ex = df.loc[i]
-        for j in range(nbHarmoniques):
-            exemple.append(float(ex[j]))
-        Z.append(exemple)
-        y.append(float(ex[nbHarmoniques]))
-
-    nbExemples = len(Z)
+    if (y == []): #on suppose implicitement qu'alors Z est également vide (on ne précise pas l'un sans preciser l'autre)
+        y,Z,nbDesc = explo.getDataEx(chemin)
 
     #Initialisation des parametres
     W1,W2 = initParam(n,Nc)
+
+    nbExemples = len(Z)
 
     #Propagation de tous les exemples avec récuperation des potentiels
     potentielsEx = []
@@ -277,7 +268,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
     tableErreur = [erreur]
 
     #Tant que l'erreur n'est pas suffisamment petite
-    while (erreur > seuil) & (nbIter <= nbIterMax):
+    while (nbIter <= nbIterMax) & (erreur > seuil):
 
         #Retropropagation des exemples
         delta = []
@@ -287,7 +278,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
         deriveesW1 = [[0 for j in range(n+1)] for i in range(Nc)]
         deriveesW2 = [0 for i in range(Nc+1)]
         for i in range(Nc):
-            for j in range(n+1):
+            for j in range(n):
                 deriveesW1[i][j] = 0
                 for k in range(nbExemples):
                     deriveesW1[i][j] += delta[k][i]*Z[k][j]
@@ -298,7 +289,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
 
         ##### MODIFICATION DES POIDS ######
         mu = 0.1
-        #Modification de mu (et donc du pas) tant que l'on a pas accepte la modificaiton
+        #Modification de mu (et donc du pas) tant que l'on a pas accepte la modification
         accepte = False
         nbIterRecherche = 1
         while ((not accepte) & (nbIterRecherche <= nbIterRechercheMax)):
@@ -322,6 +313,7 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
             if (erreur < erreur_prec):
                 accepte = True
                 mu = mu/r
+                flag[0] += 1
             else :
                 mu = mu*r
                 W1 = W1_prec
@@ -332,9 +324,10 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
 
         #Si on est sorti sans trouver de mu convenable, il faut quand même modifier les poids avce la dernière valeur de mu trouvee
         if (nbIterRecherche > nbIterRechercheMax):
-            invH = pasLM(mu,nbExemples,W1,W2,Z)
+            invH = pasLM(0.1,nbExemples,W1,W2,Z)
             #Modification des poids avec une constante valant mu
             W1,W2 = modificationPoids(W1,W2,invH,deriveesW1,deriveesW2)
+            flag[1] += 1
 
         #Propagation des exemples et recalcule des potentiels
         potentielsEx = []
@@ -350,8 +343,12 @@ def retropropagation(n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r):
 
         nbIter += 1
 
+    print(flag)
 
     #Renvoyer les tableaux des paramètres
     abs = [(i+1) for i in range(len(tableErreur))]
     plt.plot(np.array(abs),np.array(tableErreur))
     plt.show()
+
+
+#retropropagation("/home/ray974/Learning/Data/bdd_dev.db",15,3,1.5,2,20,100,10)

@@ -8,11 +8,12 @@ import numpy as np
 
 import listeOperation as lo
 
-"""Fonction trouvant une famille libre de dimension N à partir d'un vecteur u
+"""Fonction trouvant une famille libre contenant u de p vecteurs dans un espace de dimension N. 
 #param : u -> premier vecteur de la famille libre à construire
-#        p -> dimension de l'espace dans lequel on recherche une famille libre
+#        p -> nombre de vecteurs de la famille libre retournee 
 #retour : u ainsi que la famille libre de dimension N trouvee
-#precondition : N-1 >= 1 i.e. N >= 2"""
+#precondition : N-1 >= 1 i.e. N >= 2
+                p <= N """
 
 def fLibre(u,p):
     famille = [u]
@@ -41,8 +42,9 @@ def fLibre(u,p):
 
 
 
-#Fonction effectuant le procede de GS stable
-#param : fLibre -> famille que l'on orthonormalise
+""" Fonction effectuant le procede de GS stable. 
+param : fLibre -> famille libre que l'on orthonormalise 
+precondition : fLibre est une famille libre """
 
 def GS(fLibre):
     dim = len(fLibre)
@@ -74,9 +76,9 @@ def GS(fLibre):
 
 
 
-#Fonction qui calcul la projection du vecteur u sur la famille de vecteurs b
-#param : u -> vecteur dont on cherche la projection
-#        b -> famille sur laquelle on projete
+""" Fonction qui calcule la projection du vecteur u sur le sous-espace b.
+param : u -> vecteur dont on cherche la projection sur b
+        b -> sous espace sur lequel on projete """
 
 def projection(u,b):
     dim = len(b)
@@ -93,9 +95,9 @@ def projection(u,b):
 
 
 
-#Fonction qui projete les vecteurs de la famille f sur ceux de la famille b
-#param : f -> famille de vecteurs dont on cherche la projection sur b
-#        b -> famille de vecteurs sur laquelle on projete
+""" Fonction qui projete chaque vecteur de la famille f sur le sous espace engendre par b.
+param : f -> famille de vecteurs dont on cherche la projection sur b
+        b -> famille de vecteurs sur laquelle on projete """
 
 def projFamille(f,b):
     dim = len(f)
@@ -109,12 +111,15 @@ def projFamille(f,b):
 #print(projF)
 
 
-#Fonction qui, étant donné un vecteur u, et une liste de vecteur f, projète
-#tous les vecteurs de f sur le sous-espace orthogonal a u
-#param : u -> vecteur tel que l'on projete sur son orthogonal Ort
-#        f -> famille dont on cherche les composantes dans Ort pour chaque vecteur
-#        y -> autre vecteur que l'on souhaite projeter sur cette famille
-#        p -> dimension de l'espace des observations courant
+
+
+
+""" Fonction qui, étant donné un vecteur u, et une liste de vecteur f, projète
+    tous les vecteurs de f sur le sous-espace orthogonal a u
+param : u -> vecteur tel que l'on projete sur son orthogonal Ort
+        f -> famille dont on cherche les composantes dans Ort pour chaque vecteur
+        y -> autre vecteur que l'on souhaite projeter sur cette famille
+        p -> dimension de l'espace des observations courant """
 
 def projSEOrtho(u,f,p):
     fLibreU = fLibre(u,p)
@@ -129,8 +134,11 @@ def projSEOrtho(u,f,p):
 #print(projSEO)
 
 
-#Fonction calculant le coefficient de correlation entre deux vecteurs u et v centrés
-#precondition : u et v sont de meme dimension
+
+
+
+""" Fonction calculant le coefficient de correlation entre deux vecteurs u et v centrés
+precondition : u et v sont de meme dimension """
 
 def corr(u,v):
     ps1 = lo.ps(u,v)
@@ -146,8 +154,8 @@ def corr(u,v):
 
 
 
-#Fonction engendrant une variable sonde de dimension N à partir d'une distribution de
-#moyenne nulle et de variance 1
+""" Fonction engendrant une variable sonde de dimension N à partir d'une distribution de
+ moyenne nulle et de variance 1 """
 
 def genSonde(N):
     sonde = []
@@ -162,9 +170,9 @@ def genSonde(N):
 
 
 
-#Fonction qui effectue le classement de variables candidates
-#param : y -> vecteur des observations
-#        variables -> vecteur contenant toutes les variables candidates
+""" Fonction qui effectue le classement de variables candidates
+param : y -> vecteur des observations
+        variables -> vecteur contenant toutes les variables candidates """
 
 def classer(y,variables,sonde):
     N = len(variables[0])
@@ -225,8 +233,9 @@ def classer(y,variables,sonde):
 
 
 
-#Fonction trouvant la distribution de probabilité empirique des variables non pertinentes
-#en réalisant le classement avec nbVarSonde réalisation de la variable sonde (gaussienne)
+""" Fonction trouvant la distribution de probabilité empirique des variables non pertinentes
+ en réalisant le classement avec nbVarSonde réalisation de la variable sonde (gaussienne) """
+
 def distriNonPertinentes(y,variables,nbVarSonde):
 
     debut = time.time()

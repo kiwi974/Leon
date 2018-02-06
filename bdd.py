@@ -43,7 +43,7 @@ def initaliazeBDD(name):
     bdd.close()
 
 
-#initaliazeBDD("bdd_dev.db")
+initaliazeBDD("bdd_dev.db")
 
 """ Fonction ramenant les valeurs du tableau tab de l'intervalle [0,n] dans l'intervalle [0,1]. """
 
@@ -146,9 +146,12 @@ def traitementEnregistrements(name, freqMin, freqMax, nbParts):
         cursor.execute("""UPDATE female SET moyenne_freq_ponderee = ? WHERE id = ?""", (mPondF[i - 1], i))
         cursor.execute("""UPDATE female SET densites = ? WHERE id = ?""", (lo.tabToString(descripteursF[i - 1]), i))
 
+    print("On a enregistré " + str(nbH) + " fichiers concernant des enregistrements masculins.")
+    print("On a enregistré " + str(nbF) + " fichiers concernant des enregistrements masculins.")
+
     bdd.commit()
     cursor.close()
     bdd.close()
 
 
-#traitementEnregistrements("bdd_dev.db", 20, 500, 15)
+traitementEnregistrements("bdd_dev.db", 20, 500, 15)
