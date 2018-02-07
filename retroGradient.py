@@ -102,7 +102,8 @@ def EQM(y,g):
         print("***EQM***")
         print("len(y) = " + str(len(y)) + " != len(g) = " +str(n))
     for i in range(n):
-        err += (y[i] - g[i])**2
+        r = y[i] - g[i]
+        err += r**2
     err = 0.5*sqrt(err)
     return err
 
@@ -173,6 +174,26 @@ def pasLM(mu,nbExemples,W1,W2,Z):
 
 
 
+""" Fonction calculant la norme de W tel que représenté par deux matrices W1 et W2. """
+
+def normW(W1,W2):
+    #Construction du vecteur des poids
+    W = []
+    n1 = len(W1)
+    n2 = len(W2)
+
+    for i in range(n1):
+        for j in range(len(W1[0])):
+            W.append(W1[i][j])
+    for i in range(n2):
+        W.append(W2[i])
+
+    return lo.norm2(W)
+
+
+
+
+
 """ Fonction modifiant les poids par la méthode de Levenberg (-Marquardt) 
 param : W1 -> poids entre les variables et la couche cachee
         W2 -> poids entre la couche cachee et la sortie 
@@ -191,7 +212,7 @@ def modificationPoids(W1, W2, invH, derW1, derW2):
     for i in range(n1):
         for j in range(len(W1[0])):
             W.append([W1[i][j]])
-    for i in range(len(W2)):
+    for i in range(n2):
         W.append([W2[i]])
 
     #Construction du vecteur gradient de la fonction coût
@@ -227,6 +248,32 @@ def modificationPoids(W1, W2, invH, derW1, derW2):
 
 
 
+
+
+""" Fonction calculant le gradient au point représenté par W1 et W2. """
+
+def gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W2):
+    delta = []
+    for k in range(nbExemples):
+        d = retro(Nc,y[k],sortiesEx[k],potentielsEx[k],W2)
+        delta.append(d)
+    deriveesW1 = [[0 for j in range(n+1)] for i in range(Nc)]
+    deriveesW2 = [0 for i in range(Nc+1)]
+    for i in range(Nc):
+        for j in range(n):
+            deriveesW1[i][j] = 0
+            for k in range(nbExemples):
+                deriveesW1[i][j] += delta[k][i]*Z[k][j]
+    for i in range(Nc+1):
+        deriveesW2[i] = 0
+        for k in range(nbExemples):
+            deriveesW2[i] += delta[k][Nc]*tanh(potentielsEx[k][i])
+    return deriveesW1,deriveesW2
+
+
+
+
+
 """Fonction effectuant le calcul des parametres du reseau par retropropagation du
 gradient pour UNE SEULE couche cachee
 param : n -> nombre de variables par exemples (ici nombre d'harmonique par 
@@ -238,7 +285,7 @@ param : n -> nombre de variables par exemples (ici nombre d'harmonique par
         r -> facteur d'échelle pour mu
 retour : tableau des parametres du reseau apres apprentissage"""
 
-def retropropagation(chemin,n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r,y=[],Z=[]):
+def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=[],Z=[]):
 
     #Tableau flag pour la recherche du pas dans Levengerb
     flag = [0,0]
@@ -263,35 +310,28 @@ def retropropagation(chemin,n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r,y=[],Z=[
     #Calcul de l'erreur quadratique moyenne associee
     erreur = EQM(y,sortiesEx)
 
-    nbIter = 1
+    #Norme du gradient au point de depart
+    deriveesW1, deriveesW2 = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W2)
+    normG0 = normW(deriveesW1,deriveesW2)
+    print("nomrG0 = " + str(normG0))
+    normG = 10**(10)
 
+    nbIter = 1
     tableErreur = [erreur]
 
     #Tant que l'erreur n'est pas suffisamment petite
-    while (nbIter <= nbIterMax) & (erreur > seuil):
+    while (normG > c1*normG0) & (nbIter <= nbIterMax) & (erreur > seuil):
 
-        #Retropropagation des exemples
-        delta = []
-        for k in range(nbExemples):
-            d = retro(Nc,y[k],sortiesEx[k],potentielsEx[k],W2)
-            delta.append(d)
-        deriveesW1 = [[0 for j in range(n+1)] for i in range(Nc)]
-        deriveesW2 = [0 for i in range(Nc+1)]
-        for i in range(Nc):
-            for j in range(n):
-                deriveesW1[i][j] = 0
-                for k in range(nbExemples):
-                    deriveesW1[i][j] += delta[k][i]*Z[k][j]
-        for i in range(Nc+1):
-            deriveesW2[i] = 0
-            for k in range(nbExemples):
-                deriveesW2[i] += delta[k][Nc]*tanh(potentielsEx[k][i])
+        print(nbIter)
 
         ##### MODIFICATION DES POIDS ######
-        mu = 0.1
+        mu = mu_0
         #Modification de mu (et donc du pas) tant que l'on a pas accepte la modification
         accepte = False
         nbIterRecherche = 1
+        #Tableaux pour retenir les mu et les erreurs associées
+        mu_calc = []
+        erreur_calc = []
         while ((not accepte) & (nbIterRecherche <= nbIterRechercheMax)):
 
             #Calcul de l'inverse du pas du second ordre pour LM (avec l'identité et pas diag(H))
@@ -315,6 +355,8 @@ def retropropagation(chemin,n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r,y=[],Z=[
                 mu = mu/r
                 flag[0] += 1
             else :
+                mu_calc.append(mu)
+                erreur_calc.append(erreur)
                 mu = mu*r
                 W1 = W1_prec
                 W2 = W2_prec
@@ -323,8 +365,11 @@ def retropropagation(chemin,n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r,y=[],Z=[
             nbIterRecherche += 1
 
         #Si on est sorti sans trouver de mu convenable, il faut quand même modifier les poids avce la dernière valeur de mu trouvee
-        if (nbIterRecherche > nbIterRechercheMax):
-            invH = pasLM(0.1,nbExemples,W1,W2,Z)
+        if (nbIterRecherche > nbIterRechercheMax) & (not accepte):
+            #On regarde quelle erreur était la plus petite parmis celles recontrees, et on recalcule les poids en conséquence
+            indErrMin = lo.indMin(erreur_calc)
+            mu = mu_calc[indErrMin]
+            invH = pasLM(mu,nbExemples,W1,W2,Z)
             #Modification des poids avec une constante valant mu
             W1,W2 = modificationPoids(W1,W2,invH,deriveesW1,deriveesW2)
             flag[1] += 1
@@ -340,6 +385,10 @@ def retropropagation(chemin,n,Nc,seuil,l,nbIterMax,nbIterRechercheMax,r,y=[],Z=[
         #Recalculer l'erreur quadratique moyenne
         erreur = EQM(y,sortiesEx)
         tableErreur.append(erreur)
+
+        #Retropropagation des exemples
+        deriveesW1, deriveesW2 = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W2)
+        normG = normW(deriveesW1,deriveesW2)
 
         nbIter += 1
 

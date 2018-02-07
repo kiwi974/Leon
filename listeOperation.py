@@ -1,4 +1,5 @@
 import numpy as np
+from math import *
 
 #MAddition entre deux éléments d'une liste deux à deux
 #precondition : u et v sont de même taille
@@ -122,3 +123,28 @@ def tabToString(l):
 
 
 
+""" Fonction trouvant l'indice du minimum d'une liste. """
+
+def indMin(l):
+    ind = 0
+    min = l[0]
+    for i in range(1,len(l)):
+        if (l[i] < min):
+            min = l[i]
+            ind = i
+    return ind
+
+#print(str(indMin([2,4,8])) + str(indMin([48,42,8]))  + str(indMin([2,-3,8])))
+
+
+
+
+
+""" Fonction calculant la norme euclidienne d'un vecteur. """
+
+def norm2(v):
+    norm = 0
+    for i in range(len(v)):
+        norm += v[i]**2
+    norm = sqrt(norm)
+    return norm
