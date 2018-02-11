@@ -90,6 +90,21 @@ def EQM(y,g):
 
 
 
+""" Fonction calculant la fraction d'exemples mal classés en classification. """
+
+def errClass(y,g):
+    err = 0
+    errk = []
+    for i in range(len(y)):
+        r = -y[i]*g[i]
+        if (r >= 0):
+            err += 1
+            errk.append(1)
+        else:
+            errk.append(0)
+    return err, errk
+
+
 """ Fonction calculant les "delta" de l'algorithme de retropropagation.
 param : Nc -> nombre de neurones de la couche cachee
         y -> sortie pour l'exemple considere
@@ -204,20 +219,14 @@ def gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W):
             der = 0
             for k in range(nbExemples):
                 d = delta[k][i]*Z[k][j]
-                if (sortiesEx[k] == 0.0):
-                    derg[k].append(0.0)
-                else :
-                    derg[k].append(d/(-2*sortiesEx[k]))
+                derg[k].append(d/(-2*(y[k]-sortiesEx[k])))
                 der += d
             deriveesW.append(der)
     for i in range(Nc+1):
         der = 0
         for k in range(nbExemples):
             d = delta[k][Nc+1]*tanh(potentielsEx[k][i])
-            if (sortiesEx[k] == 0.0):
-                derg[k].append(0.0)
-            else :
-                derg[k].append(d/(-2*sortiesEx[k]))
+            derg[k].append(d/(-2*(y[k]-sortiesEx[k])))
             der += d
         deriveesW.append(der)
 
@@ -271,9 +280,10 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
         potentielsEx.append(potentiels)
 
     #Calcul de l'erreur quadratique moyenne associee
-    erreur,errk = EQM(y,sortiesEx)
+    erreur, errk = EQM(y,sortiesEx)
     var.append(erreur)
     var.append(errk)
+    print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(lo.sum(errk)))
 
     #Norme du gradient au point de depart
     deriveesW, deriveesg = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W)
@@ -286,8 +296,8 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
     tableErreur = [erreur]
 
     #Tant que l'erreur n'est pas suffisamment petite
-    while (normG > c1*normG0) & (nbIter <= nbIterMax) & (erreur > seuil):
-
+    while (normG > c1*normG0) & (nbIter <= nbIterMax):
+        print("Itération : " + str(nbIter))
         ##### MODIFICATION DES POIDS ######
         mu = mu_0
         #Modification de mu (et donc du pas) tant que l'on a pas accepte la modification
@@ -345,6 +355,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             sortie,potentiels = g(Z[i],n,Nc,W)
             sortiesEx.append(sortie)
             potentielsEx.append(potentiels)
+        print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(lo.sum(errk)))
 
         #Recalculer l'erreur quadratique moyenne
         erreur,errk = EQM(y,sortiesEx)
@@ -356,7 +367,12 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
 
         nbIter += 1
 
-    print("              " +str(flag))
+    if (normG <= c1*normG0):
+        flag.append("Décroissance gradient.")
+    elif (nbIter > nbIterMax):
+        flag.append("Iteration max")
+    print("              " + str(flag))
+    print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(lo.sum(errk)))
 
     #Nettoyage memoire
     explo.clear(var)

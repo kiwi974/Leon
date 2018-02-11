@@ -159,3 +159,35 @@ def transpose(l):
     for u in l:
         t.append([u])
     return t
+
+
+
+
+
+""" Fonction calculant la répartition des élements d'une liste selon leur distance à 1 ou -1. """
+
+def distriDistUn(y,l):
+    distri = [0 for i in range(11)]
+    procheZero = 0
+    for i in range(len(l)):
+        d = 1
+        trouve = False
+        while (d <= 10) & (not trouve):
+            if (abs(y[i]-l[i]) <= d/10):
+                distri[d-1] += 1
+                trouve = True
+            d += 1
+        if (abs(y[i]-l[i]) > 1):
+            distri[10] += 1
+        if (abs(l[i]) <= 10**(-6)):
+            procheZero += 1
+    distri.append(str(procheZero))
+    return distri
+
+""" Somme des éléments d'un tableau. """
+
+def sum(l):
+    s = 0
+    for i in range(len(l)):
+        s += l[i]
+    return s
