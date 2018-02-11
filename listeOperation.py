@@ -148,3 +148,14 @@ def norm2(v):
         norm += v[i]**2
     norm = sqrt(norm)
     return norm
+
+
+
+
+
+""" Fonction qui transpose un vecteir colonne. """
+def transpose(l):
+    t = []
+    for u in l:
+        t.append([u])
+    return t

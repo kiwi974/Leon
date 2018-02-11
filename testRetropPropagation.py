@@ -8,9 +8,9 @@ import retroGradientOpt as rgOpt
 import matplotlib.pyplot as plt
 import numpy as np
 
-Nc = 12
+Nc = 9
 
-for i in range(10):
+for i in range(1):
 
     " Generation des donnees "
     y = []
@@ -44,28 +44,31 @@ for i in range(10):
 
     " Apprentissage sur les donnees generees "
 
-    for j in range(1):
+    for j in range(2,Nc+1):
+        y = [1,-1]
+        Z = [[1,10,10],[1,0,0]]
         print("          Apprentissage n°1")
-        tE1 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,2,0.1,10**(-2),10**(-1),400,400,10,y,Z)
+        tE1 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,j,0.1,10**(-6),10**(-1),400,400,10,y,Z)
         print("          Apprentissage n°2")
-        tE2 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,2,0.1,10**(-2),10**(-1),400,400,10,y,Z)
+        tE2 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,j,0.1,10**(-6),10**(-1),400,400,10,y,Z)
         print("          Apprentissage n°3")
-        tE3 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,2,0.1,10**(-2),10**(-1),400,400,10,y,Z)
+        tE3 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,j,0.1,10**(-6),10**(-1),400,400,10,y,Z)
         print("          Apprentissage n°4")
-        tE4 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,2,0.1,10**(-2),10**(-1),400,400,10,y,Z)
+        tE4 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,j,0.1,10**(-6),10**(-1),400,400,10,y,Z)
         print("          Apprentissage n°5")
-        tE5 = rg.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,2,0.1,10**(-2),10**(-1),400,400,10,y,Z)
+        tE5 = rgOpt.retropropagation("/home/ray974/Learning/Data/bdd_dev.db",2,j,0.1,10**(-6),10**(-1),400,400,10,y,Z)
         abs1 = [(i+1) for i in range(len(tE1))]
         abs2 = [(i+1) for i in range(len(tE2))]
         abs3 = [(i+1) for i in range(len(tE3))]
         abs4 = [(i+1) for i in range(len(tE4))]
         abs5 = [(i+1) for i in range(len(tE5))]
-        plt.plot(np.array(abs1),np.array(tE1),'red')
-        plt.plot(np.array(abs2),np.array(tE2),'gold')
-        plt.plot(np.array(abs3),np.array(tE3),'darkgreen')
-        plt.plot(np.array(abs4),np.array(tE4),'cyan')
-        plt.plot(np.array(abs5),np.array(tE5),'slategrey')
-        plt.title('Nc = ' + str(i) + 'neurones cachés.')
+        plt.plot(np.array(abs1),np.array(tE1),'red',label=str(tE1[len(tE1)-1]))
+        plt.plot(np.array(abs2),np.array(tE2),'gold',label=str(tE2[len(tE2)-1]))
+        plt.plot(np.array(abs3),np.array(tE3),'darkgreen',label=str(tE3[len(tE3)-1]))
+        plt.plot(np.array(abs4),np.array(tE4),'cyan',label=str(tE4[len(tE4)-1]))
+        plt.plot(np.array(abs5),np.array(tE5),'slategrey',label=str(tE5[len(tE5)-1]))
+        plt.legend()
+        plt.title('Nc = ' + str(j) + 'neurones cachés.')
         plt.xlabel("Nombre d'itérations")
         plt.ylabel("Erreur quadratique moyenne")
         plt.show()

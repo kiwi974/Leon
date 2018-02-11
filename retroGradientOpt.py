@@ -103,7 +103,6 @@ def retro(n,Nc,y,g,potentiel,W):
 
     #Construction du tableau de derivee : en tout il y a Nc+1 neurones
     delta = []
-
     #Calcul pour le neurone de sortie
     #print("potentiel = " + str(potentiel))
     deltaNc = -2*(y-g)*(1/(cosh(potentiel[Nc])**2))
@@ -180,12 +179,11 @@ param : W1 -> poids entre les variables et la couche cachee
 
 def modificationPoids(W, invH, derW):
 
-    #Calcul du pas de LM
-    pas = np.mat(invH)*(np.mat(derW))
+    nW = []
 
-    #Modification des poids
-    W = (np.array(W) - pas).tolist()
-
+    for i in range(len(invH)):
+        nW.append(lo.ps(invH[i],derW))
+    W = list(nW)
     return W
 
 
@@ -200,13 +198,10 @@ def gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W):
     for k in range(nbExemples):
         d = retro(n,Nc,y[k],sortiesEx[k],potentielsEx[k],W)
         delta.append(d)
-    print("d est de taille " + str(len(delta[0])))
     deriveesW = []
-    nbC = 0
     for i in range(1,Nc+1):
         for j in range(n+1):
             der = 0
-            nbC += 1
             for k in range(nbExemples):
                 d = delta[k][i]*Z[k][j]
                 if (sortiesEx[k] == 0.0):
@@ -217,7 +212,6 @@ def gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W):
             deriveesW.append(der)
     for i in range(Nc+1):
         der = 0
-        nbC += 1
         for k in range(nbExemples):
             d = delta[k][Nc+1]*tanh(potentielsEx[k][i])
             if (sortiesEx[k] == 0.0):
@@ -226,7 +220,6 @@ def gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W):
                 derg[k].append(d/(-2*sortiesEx[k]))
             der += d
         deriveesW.append(der)
-    print("---" + str(nbC))
 
     return deriveesW, derg
 
@@ -284,7 +277,6 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
 
     #Norme du gradient au point de depart
     deriveesW, deriveesg = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W)
-    print("derW : " + str(len(deriveesW)) + " - derg : " + str(len(deriveesg[0])))
     var.append(deriveesW)
     normG0 = lo.norm2(deriveesW)
     #print("nomrG0 = " + str(normG0))
@@ -321,7 +313,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             for i in range(nbExemples):
                 sortie,potentiels = g(Z[i],n,Nc,W)
                 sortiesEx.append(sortie)
-            erreur = EQM(y,sortiesEx)
+            erreur,errk = EQM(y,sortiesEx)
 
             if (erreur < erreur_prec):
                 accepte = True
@@ -343,7 +335,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             mu = mu_calc[indErrMin]
             invH = pasLM(nbPoids,mu,nbExemples,deriveesg)
             #Modification des poids avec une constante valant mu
-            W1,W2 = modificationPoids(W1,invH,deriveesW)
+            W = modificationPoids(W,invH,deriveesW)
             flag[1] += 1
 
         #Propagation des exemples et recalcule des potentiels
@@ -355,16 +347,16 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             potentielsEx.append(potentiels)
 
         #Recalculer l'erreur quadratique moyenne
-        erreur = EQM(y,sortiesEx)
+        erreur,errk = EQM(y,sortiesEx)
         tableErreur.append(erreur)
 
         #Retropropagation des exemples
-        deriveesW = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W)
+        deriveesW, deriveesg = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W)
         normG = lo.norm2(W)
 
         nbIter += 1
 
-    print(flag)
+    print("              " +str(flag))
 
     #Nettoyage memoire
     explo.clear(var)
