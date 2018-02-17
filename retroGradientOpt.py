@@ -63,6 +63,10 @@ def g(x,n,Nc,W):
             p += W[i*(n+1)+j]*x[j]
         potentiels.append(p)
         modele += W[Nc*(n+1)+i]*tanh(p)
+    pS = 0
+    for j in range(Nc+1):
+        pS += W[Nc*(n+1)+j]*potentiels[j]
+    potentiels.append(pS)
     return modele,potentiels
 
 
@@ -119,16 +123,15 @@ def retro(n,Nc,y,g,potentiel,W):
     #Construction du tableau de derivee : en tout il y a Nc+1 neurones
     delta = []
     #Calcul pour le neurone de sortie
-    #print("potentiel = " + str(potentiel))
-    deltaNc = -2*(y-g)*(1/(cosh(potentiel[Nc])**2))
+    deltaS = -2*(y-g)*(1/(cosh(potentiel[Nc+1])**2))
 
     #Calcul des autres poids
     for i in range(Nc+1):
-        der = (1/(cosh(potentiel[i])**2))*(deltaNc*W[(n+1)*Nc+i])
+        der = (potentiel[Nc+1]*W[(n+1)*Nc+i])/(cosh(potentiel[i])**2)
         delta.append(der)
 
     #Ajout de la derivee de la sortie
-    delta.append(deltaNc)
+    delta.append(deltaS)
 
     return delta
 
