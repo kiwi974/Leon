@@ -191,3 +191,16 @@ def sum(l):
     for i in range(len(l)):
         s += l[i]
     return s
+
+
+
+
+
+""" Fonction transformant une liste en matrice diagonale. """
+
+def diag(l):
+    n = len(l)
+    M = [[0 for i in range(n)] for j in range(n)]
+    for i in range(n):
+        M[i][i] = l[i]
+    return M

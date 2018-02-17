@@ -150,35 +150,19 @@ def derg(err,derivPi,nbPoids):
 
 
 
-""" Fonction effectuant le calcul de la matrice H pour faire la méthode de Levenberg-Marquardt"""
+""" Fonction calculant le pas de Levenberg-Marquardt. 
+param : mu -> damping step 
+        J  -> matrice jacobienne de G(w)."""
 
-def computeH(invH_prec,zeta):
-    transpo = (np.array(zeta)).T
-    iH = np.array(invH_prec)
-    z = np.array(zeta)
-    numerateur = iH*z*transpo*iH
-    denominateur = 1 + transpo*iH*z
-    invH = np.array(iH) - (numerateur/denominateur)
-    return invH.tolist()
-
-
-
-
-
-
-""" Fonction calculant le pas de Levenberg-Marquardt pour le pas mu et l'identité comme second 
-terme. """
-
-def pasLM(nbPoids,mu,nbExemples,deriveesg):
-    I = [[0 for i in range(nbPoids)] for j in range(nbPoids)]
-    for i in range(nbPoids):
-        I[i][i] = (1/mu)
-    invH = I
-    for k in range(nbExemples):
-        zeta = deriveesg[k]
-        invH_prec = invH
-        invH = computeH(invH_prec,zeta)
-    return invH
+def pasLM(mu,J,nbPoids):
+    Z = np.array(J).transpose().dot(np.array(J))
+    eigenValues = np.linalg.eigvals(Z)
+    diago = np.array(lo.diag(eigenValues))
+    H = Z + mu*np.eye(nbPoids,nbPoids)
+    L = np.linalg.cholesky(np.array(H))
+    invL = np.linalg.inv(L)
+    pas = invL.transpose()*invL
+    return pas
 
 
 
@@ -309,7 +293,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
         while ((not accepte) & (nbIterRecherche <= nbIterRechercheMax)):
 
             #Calcul de l'inverse du pas du second ordre pour LM (avec l'identité et pas diag(H))
-            invH = pasLM(nbPoids,mu,nbExemples,deriveesg)
+            invH = pasLM(mu,deriveesg,nbPoids)
             if (nbIter ==1) & (nbIterRecherche==1):
                 var.append(invH)
             W_prec = W
@@ -343,7 +327,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             #On regarde quelle erreur était la plus petite parmis celles recontrees, et on recalcule les poids en conséquence
             indErrMin = lo.indMin(erreur_calc)
             mu = mu_calc[indErrMin]
-            invH = pasLM(nbPoids,mu,nbExemples,deriveesg)
+            invH = pasLM(mu,deriveesg,nbPoids)
             #Modification des poids avec une constante valant mu
             W = modificationPoids(W,invH,deriveesW)
             flag[1] += 1
