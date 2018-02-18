@@ -109,6 +109,9 @@ def errClass(y,g):
     return err, errk
 
 
+
+
+
 """ Fonction calculant les "delta" de l'algorithme de retropropagation.
 param : Nc -> nombre de neurones de la couche cachee
         y -> sortie pour l'exemple considere
@@ -135,58 +138,6 @@ def retro(n,Nc,y,g,potentiel,W):
 
     return delta
 
-
-
-
-
-""" Fonction calculant la derivee en w du modèle pour l'exemple xk evaluee au point W
-param : err -> erreur associee à l'exemple k
-        derivPi -> derivees des fonctions coût par rapport à chaque variable
-retour : approximation de la derivee du modele au point w donne par W1 et W2 a x fixe"""
-
-def derg(err,derivPi,nbPoids):
-    derivg = []
-    for i in range(nbPoids):
-        derivg.append(derivPi/(-2*err))
-    return derivg
-
-
-
-
-""" Fonction calculant le pas de Levenberg-Marquardt. 
-param : mu -> damping step 
-        J  -> matrice jacobienne de G(w)."""
-
-def pasLM(mu,J,nbPoids):
-    Z = np.array(J).transpose().dot(np.array(J))
-    eigenValues = np.linalg.eigvals(Z)
-    diago = np.array(lo.diag(eigenValues))
-    H = Z + mu*np.eye(nbPoids,nbPoids)
-    L = np.linalg.cholesky(np.array(H))
-    invL = np.linalg.inv(L)
-    pas = invL.transpose()*invL
-    return pas
-
-
-
-
-
-""" Fonction modifiant les poids par la méthode de Levenberg (-Marquardt) 
-param : W1 -> poids entre les variables et la couche cachee
-        W2 -> poids entre la couche cachee et la sortie 
-        invH -> matrice inverse intervenant dans le pas de LM
-        derW1 -> derivees de la fonction coût par rapport aux param. de la 1ere couche
-        derW2 -> derivees de la fonction coût par rapport aux param. de la 2eme couche
-"""
-
-def modificationPoids(W, invH, derW):
-
-    nW = []
-
-    for i in range(len(invH)):
-        nW.append(lo.ps(invH[i],derW))
-    W = list(nW)
-    return W
 
 
 
@@ -223,6 +174,43 @@ def gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W):
 
 
 
+""" Fonction calculant le pas de Levenberg-Marquardt. 
+param : mu -> damping step 
+        J  -> matrice jacobienne de G(w)."""
+
+def pasLM(mu,J,nbPoids):
+    Z = np.array(J).transpose().dot(np.array(J))
+    eigenValues = np.linalg.eigvals(Z)
+    diago = np.array(lo.diag(eigenValues))
+    H = Z + mu*np.eye(nbPoids,nbPoids)
+    L = np.linalg.cholesky(np.array(H))
+    invL = np.linalg.inv(L)
+    pas = invL.transpose()*invL
+    return pas
+
+
+
+
+
+""" Fonction modifiant les poids par la méthode de Levenberg (-Marquardt) 
+param : W1 -> poids entre les variables et la couche cachee
+        W2 -> poids entre la couche cachee et la sortie 
+        invH -> matrice inverse intervenant dans le pas de LM
+        derW1 -> derivees de la fonction coût par rapport aux param. de la 1ere couche
+        derW2 -> derivees de la fonction coût par rapport aux param. de la 2eme couche
+"""
+
+def pasPoids(invH, derW):
+    nW = []
+    for i in range(len(invH)):
+        nW.append(lo.ps(invH[i],derW))
+    return list(nW)
+
+
+
+
+
+
 """Fonction effectuant le calcul des parametres du reseau par retropropagation du
 gradient pour UNE SEULE couche cachee
 param : n -> nombre de variables par exemples (ici nombre d'harmonique par 
@@ -234,7 +222,7 @@ param : n -> nombre de variables par exemples (ici nombre d'harmonique par
         r -> facteur d'échelle pour mu
 retour : tableau des parametres du reseau apres apprentissage"""
 
-def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=[],Z=[]):
+def retropropagation(chemin,n,Nc,c1,c2,mu_0,nbIterMax,nbIterRechercheMax,r,y=[],Z=[]):
 
     #Liste des variables créées
     var = []
@@ -270,7 +258,6 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
     erreur, errk = EQM(y,sortiesEx)
     var.append(erreur)
     var.append(errk)
-    print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(lo.sum(errk)))
 
     #Norme du gradient au point de depart
     deriveesW, deriveesg = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W)
@@ -278,13 +265,16 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
     normG0 = lo.norm2(deriveesW)
     #print("nomrG0 = " + str(normG0))
     normG = 10**(10)
+    W_prec = [10**(10) for i in range(nbPoids)]
+
+    print("-------- DEBUT --------" + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(normG))
 
     nbIter = 1
     tableErreur = [erreur]
 
     #Tant que l'erreur n'est pas suffisamment petite
-    while (normG > c1*normG0) & (nbIter <= nbIterMax):
-        print("Itération : " + str(nbIter))
+    while (normG > c1*normG0) & (nbIter <= nbIterMax) & ((lo.norm2(lo.sous(W,W_prec))) > c2*lo.norm2(W_prec)):
+        print("              Itération : " + str(nbIter))
         ##### MODIFICATION DES POIDS ######
         mu = mu_0
         #Modification de mu (et donc du pas) tant que l'on a pas accepte la modification
@@ -293,6 +283,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
         #Tableaux pour retenir les mu et les erreurs associées
         mu_calc = []
         erreur_calc = []
+        W_prec = W
         while ((not accepte) & (nbIterRecherche <= nbIterRechercheMax)):
 
             #Calcul de l'inverse du pas du second ordre pour LM (avec l'identité et pas diag(H))
@@ -303,7 +294,8 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             erreur_prec = erreur
 
             #Modification des poids avec une constante valant mu
-            W = modificationPoids(W,invH,deriveesW)
+            delta = pasPoids(invH,deriveesW)
+            W = lo.add(W,delta)
 
             #Comparaison de l'erreur commise avec ces paramètres et de l'ancienne et decision
             sortiesEx = []
@@ -332,9 +324,9 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             mu = mu_calc[indErrMin]
             invH = pasLM(mu,deriveesg,nbPoids)
             #Modification des poids avec une constante valant mu
-            W = modificationPoids(W,invH,deriveesW)
+            delta = pasPoids(invH,deriveesW)
+            W = lo.add(W,delta)
             flag[1] += 1
-
         #Propagation des exemples et recalcule des potentiels
         potentielsEx = []
         sortiesEx = []
@@ -342,7 +334,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
             sortie,potentiels = g(Z[i],n,Nc,W)
             sortiesEx.append(sortie)
             potentielsEx.append(potentiels)
-        print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(lo.sum(errk)))
+        print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(normG))
 
         #Recalculer l'erreur quadratique moyenne
         erreur,errk = EQM(y,sortiesEx)
@@ -350,7 +342,7 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
 
         #Retropropagation des exemples
         deriveesW, deriveesg = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,W)
-        normG = lo.norm2(W)
+        normG = lo.norm2(deriveesW)
 
         nbIter += 1
 
@@ -358,8 +350,10 @@ def retropropagation(chemin,n,Nc,seuil,c1,mu_0,nbIterMax,nbIterRechercheMax,r,y=
         flag.append("Décroissance gradient.")
     elif (nbIter > nbIterMax):
         flag.append("Iteration max")
+    print(' ')
     print("              " + str(flag))
-    print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(lo.sum(errk)))
+    print("              " + str(lo.distriDistUn(y,sortiesEx)) + " <-> " + str(erreur) + " <-> " + str(normG))
+    print(' ')
 
     #Nettoyage memoire
     explo.clear(var)

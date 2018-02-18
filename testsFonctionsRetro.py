@@ -48,6 +48,7 @@ errk[0] = ((errk[0]*100)//1)/100  #### car Python renvoie 1-0.98 = 0.02000000000
 errkB = (errk[0]==0.02)&(errk[1]==0.26)&(errk[2]==-0.13)&(errk[3]==0.47)
 print('Test n°1 : errk = [0.02,0.26,-0.13,0.53] : ' + str(errkB))
 print('Test n°2 : err = 0.5*sqrt(0.02**2+0.26**2+0.13**2+0.53**2) : ' + str(err-(0.5*sqrt(0.02**2+0.26**2+0.13**2+0.53**2)) <= 10**(-8)))
+print(' ')
 
 
 
@@ -62,3 +63,17 @@ delta = retro(n,Nc,y,g,potentiel,Wg)
 deltaPrevu = [21/(cosh(1)**2),21/(cosh(9)**2),21/(cosh(11)**2),(-2)*(y-g)/(cosh(21)**2)]
 deltaB = (delta[0]==deltaPrevu[0])&(delta[1]==deltaPrevu[1])&(delta[2]==deltaPrevu[2])&(delta[3]==deltaPrevu[3])
 print('Test n°1 : delta = deltaPrevu : ' + str(deltaB))
+print(' ')
+
+
+
+
+""" FONCTION : gradient """
+print(' ')
+print('---------- TEST : gradient ----------')
+nbExemples = 2
+y = [1,-1]
+sortiesEx = [0.74,-0.87]
+Z = [[1,0,0],[1,10,10]]
+potentielsEx = [[1,2,3,5],[1,2,4,2]]
+dw, dg = gradient(nbExemples,n,Nc,y,sortiesEx,potentielsEx,Z,Wg)

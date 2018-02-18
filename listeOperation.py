@@ -184,6 +184,10 @@ def distriDistUn(y,l):
     distri.append(str(procheZero))
     return distri
 
+
+
+
+
 """ Somme des éléments d'un tableau. """
 
 def sum(l):
